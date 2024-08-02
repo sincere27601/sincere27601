@@ -1,4 +1,4 @@
-<h1>Hi, I'm Mike! <br/><a href="https://github.com/sincere27601">Programmer</a>, <a href="https://www.linkedin.com/in/michaelraysor/">Cybersecurity Professional</a>, <a href="https://www.youtube.com/c/joshmadakor">YouTuber</a></h1>
+<h1>Hi, I'm Mike! <br/><a href="https://github.com/sincere27601">Programmer</a>, <a href="https://www.linkedin.com/in/michaelraysor/">Cybersecurity Professional</a>, <a href="https://www.youtube.com/c/joshmadakor">Non Profit Mentor</a></h1>
 
 <h2>👨‍💻 Software Development Projects:</h2>
 
