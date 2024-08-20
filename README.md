@@ -4,8 +4,8 @@
 
 - <b> Azure/Cloud </b>
   - [Creating a Live SOC & Honeynet](https://github.com/sincere27601/Azure-SOC)
-- <b>Creating osTicket System</b>
-  - [Image Analysis Middleware]() 
+- <b>osTicket on Virtual Machine</b>
+  - [Creating osTicket System](https://github.com/sincere27601/osticket-prereq) 
 - <b>PowerShell</b>
   - [Windows EventLog: Failed RDP Logins Source IP to full GeoData Conversion](https://github.com/joshmadakor1/Sentinel-Lab)
   - [JWipe (Disk Wiping Utility)](https://github.com/joshmadakor1/Jwipe.PowerShell)
