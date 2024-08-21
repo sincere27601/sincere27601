@@ -4,8 +4,6 @@
 
 - <b> Azure/Cloud </b>
   - [Creating a Live SOC & Honeynet](https://github.com/sincere27601/Azure-SOC)
-- <b>osTicket on Virtual Machine</b>
-  - [Creating osTicket System](https://github.com/sincere27601/osticket-prereq)
 
  <h2>🤳 Connect with me:</h2>
 
