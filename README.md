@@ -4,6 +4,11 @@
 
 - <b> Azure/Cloud </b>
   - [Creating a Live SOC & Honeynet](https://github.com/sincere27601/Azure-SOC)
+ 
+<h2>👨‍💻 UI/UX Projects:</h2>
+
+- <b> Javascript/Tailwind/Google Maps/Material UI/React/ </b>
+  - [Created a Replica Airbnb Website]( http://airbnb-gamma-cyan.vercel.app/)
 
  <h2>🤳 Connect with me:</h2>
 
