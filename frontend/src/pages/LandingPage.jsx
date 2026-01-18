@@ -263,14 +263,81 @@ const LandingPage = () => {
             Ready to Transform Your Meetings?
           </h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-            Start recording and summarizing your meetings today. No credit card required.
+            Start recording and summarizing your meetings today. Choose a plan that works for you.
           </p>
-          <Link to="/app" data-testid="cta-get-started-bottom">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
-              Get Started for Free
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/app/subscription" data-testid="cta-view-pricing">
+              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
+                View Pricing
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+            <Link to="/app" data-testid="cta-get-started-bottom">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                Try Free Demo
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Preview Section */}
+      <section id="pricing" className="py-20 px-6" data-testid="pricing-section">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-['Manrope'] mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Choose the plan that fits your needs. Cancel anytime.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Monthly */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Monthly</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-slate-900">$9.99</span>
+                <span className="text-slate-500">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {["Unlimited meetings", "AI transcription", "Smart summaries", "Action items"].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-slate-600">
+                    <Check className="w-5 h-5 text-emerald-500" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/app/subscription">
+                <Button variant="outline" className="w-full">Choose Monthly</Button>
+              </Link>
+            </div>
+
+            {/* Yearly */}
+            <div className="bg-white border-2 border-primary rounded-2xl p-8 relative hover:shadow-lg transition-shadow">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                <Star className="w-3 h-3" /> Save $40
+              </div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Yearly</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-slate-900">$79.99</span>
+                <span className="text-slate-500">/year</span>
+                <p className="text-sm text-emerald-600 mt-1">$6.67/month</p>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {["Unlimited meetings", "AI transcription", "Smart summaries", "Action items", "Priority support"].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-slate-600">
+                    <Check className="w-5 h-5 text-emerald-500" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/app/subscription">
+                <Button className="w-full bg-primary hover:bg-primary/90">Choose Yearly</Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
