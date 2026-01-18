@@ -226,6 +226,87 @@ class SummaryAITester:
             200
         )
 
+    def test_subscription_plans(self):
+        """Test getting subscription plans"""
+        success, response = self.run_test(
+            "Get Subscription Plans",
+            "GET",
+            "api/subscription/plans",
+            200
+        )
+        
+        if success and response:
+            plans = response.get('plans', [])
+            if len(plans) >= 2:
+                # Check for monthly and yearly plans
+                monthly_plan = next((p for p in plans if p.get('id') == 'monthly'), None)
+                yearly_plan = next((p for p in plans if p.get('id') == 'yearly'), None)
+                
+                if monthly_plan and yearly_plan:
+                    # Validate monthly plan
+                    if monthly_plan.get('price') == 9.99 and monthly_plan.get('interval') == 'month':
+                        print(f"   ✅ Monthly plan: ${monthly_plan.get('price')}/month")
+                    else:
+                        print(f"   ❌ Monthly plan price/interval incorrect")
+                        
+                    # Validate yearly plan  
+                    if yearly_plan.get('price') == 79.99 and yearly_plan.get('interval') == 'year':
+                        print(f"   ✅ Yearly plan: ${yearly_plan.get('price')}/year")
+                    else:
+                        print(f"   ❌ Yearly plan price/interval incorrect")
+                else:
+                    print(f"   ❌ Missing monthly or yearly plan")
+            else:
+                print(f"   ❌ Expected at least 2 plans, got {len(plans)}")
+        
+        return success
+
+    def test_subscription_checkout(self):
+        """Test creating subscription checkout session"""
+        checkout_data = {
+            "plan_id": "monthly",
+            "origin_url": "https://briefnote.preview.emergentagent.com"
+        }
+        
+        success, response = self.run_test(
+            "Create Subscription Checkout",
+            "POST",
+            "api/subscription/checkout",
+            200,
+            data=checkout_data
+        )
+        
+        if success and response:
+            if 'checkout_url' in response and 'session_id' in response:
+                print(f"   ✅ Checkout URL generated: {response.get('checkout_url')[:50]}...")
+                return response.get('session_id')
+            else:
+                print(f"   ❌ Missing checkout_url or session_id in response")
+        
+        return None
+
+    def test_subscription_status(self, session_id):
+        """Test getting subscription status"""
+        if not session_id:
+            self.log_test("Get Subscription Status", False, "No session ID provided")
+            return False
+            
+        return self.run_test(
+            "Get Subscription Status",
+            "GET",
+            f"api/subscription/status/{session_id}",
+            200
+        )
+
+    def test_subscription_transactions(self):
+        """Test getting payment transactions"""
+        return self.run_test(
+            "Get Payment Transactions",
+            "GET",
+            "api/subscription/transactions",
+            200
+        )
+
     def run_all_tests(self):
         """Run comprehensive API tests"""
         print("🚀 Starting Summary AI Backend API Tests")
