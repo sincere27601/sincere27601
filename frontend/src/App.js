@@ -9,6 +9,8 @@ import RecordMeeting from "@/pages/RecordMeeting";
 import UploadMeeting from "@/pages/UploadMeeting";
 import MeetingDetails from "@/pages/MeetingDetails";
 import MeetingHistory from "@/pages/MeetingHistory";
+import PricingPage from "@/pages/PricingPage";
+import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 
 // Layout
 import AppLayout from "@/components/layout/AppLayout";
@@ -25,6 +27,8 @@ function App() {
             <Route path="upload" element={<UploadMeeting />} />
             <Route path="meeting/:id" element={<MeetingDetails />} />
             <Route path="history" element={<MeetingHistory />} />
+            <Route path="subscription" element={<PricingPage />} />
+            <Route path="subscription/success" element={<SubscriptionSuccess />} />
           </Route>
         </Routes>
       </BrowserRouter>
