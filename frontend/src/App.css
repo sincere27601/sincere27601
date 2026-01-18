@@ -54,7 +54,8 @@
 }
 
 .record-button.recording {
-    @apply bg-rose-600 animate-pulse-recording;
+    @apply bg-rose-600;
+    animation: pulse-recording 1.5s ease-in-out infinite;
 }
 
 /* Upload zone */
