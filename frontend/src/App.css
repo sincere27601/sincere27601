@@ -1,34 +1,134 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* App specific styles */
+
+/* Sidebar styles */
+.sidebar {
+    background-color: hsl(var(--sidebar));
+    color: hsl(var(--sidebar-foreground));
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.sidebar-link:hover {
+    @apply bg-white/10;
 }
 
-.App-link {
-    color: #61dafb;
+.sidebar-link.active {
+    @apply bg-white/15 font-medium;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Card hover effects */
+.card-interactive {
+    @apply transition-all duration-200 cursor-pointer;
+}
+
+.card-interactive:hover {
+    @apply border-primary/50 shadow-md;
+}
+
+/* Status badge colors */
+.status-completed {
+    @apply bg-emerald-100 text-emerald-700;
+}
+
+.status-processing {
+    @apply bg-amber-100 text-amber-700;
+}
+
+.status-pending {
+    @apply bg-slate-100 text-slate-700;
+}
+
+.status-error {
+    @apply bg-rose-100 text-rose-700;
+}
+
+/* Recording button */
+.record-button {
+    @apply relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200;
+}
+
+.record-button.idle {
+    @apply bg-rose-500 hover:bg-rose-600;
+}
+
+.record-button.recording {
+    @apply bg-rose-600 animate-pulse-recording;
+}
+
+/* Upload zone */
+.upload-zone {
+    @apply border-2 border-dashed border-slate-300 rounded-xl p-12 text-center transition-all duration-200;
+}
+
+.upload-zone:hover {
+    @apply border-primary bg-primary/5;
+}
+
+.upload-zone.dragging {
+    @apply border-primary bg-primary/10;
+}
+
+/* Transcript view */
+.transcript-container {
+    @apply font-mono text-sm leading-relaxed;
+}
+
+/* Summary section */
+.summary-section {
+    @apply p-4 rounded-lg bg-slate-50 border border-slate-200;
+}
+
+/* Action items */
+.action-item {
+    @apply flex items-start gap-3 p-3 rounded-lg bg-white border border-slate-200 transition-all duration-200;
+}
+
+.action-item:hover {
+    @apply shadow-sm;
+}
+
+/* Empty state */
+.empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+}
+
+/* Loading skeleton */
+.skeleton {
+    @apply bg-slate-200 rounded animate-pulse;
+}
+
+/* Feature card */
+.feature-card {
+    @apply p-6 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+/* Hero section */
+.hero-section {
+    @apply gradient-hero min-h-[600px] flex items-center;
+}
+
+/* Navigation */
+.nav-link {
+    @apply text-slate-600 hover:text-primary transition-colors duration-200 font-medium;
+}
+
+/* CTA Button */
+.cta-button {
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-all duration-200 active:scale-95;
+}
+
+/* Meeting card */
+.meeting-card {
+    @apply bg-white border border-slate-200 rounded-xl p-6 hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer;
+}
+
+/* Waveform visualizer */
+.waveform-container {
+    @apply flex items-end justify-center gap-1 h-16;
+}
+
+.waveform-bar {
+    @apply w-1 bg-primary rounded-full;
 }
