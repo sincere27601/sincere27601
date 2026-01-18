@@ -1,0 +1,176 @@
+{
+  "design_system": {
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "Public Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-relaxed",
+        "caption": "text-sm text-muted-foreground"
+      }
+    },
+    "colors": {
+      "theme": "light",
+      "palette": {
+        "primary": {
+          "DEFAULT": "#2563EB",
+          "foreground": "#FFFFFF"
+        },
+        "secondary": {
+          "DEFAULT": "#F1F5F9",
+          "foreground": "#0F172A"
+        },
+        "background": "#FFFFFF",
+        "surface": "#F8FAFC",
+        "sidebar": "#0F172A",
+        "sidebar_foreground": "#F8FAFC",
+        "accent": {
+          "amber": "#F59E0B",
+          "emerald": "#10B981",
+          "rose": "#E11D48"
+        },
+        "border": "#E2E8F0"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8 md:gap-12",
+      "component_gap": "gap-4"
+    },
+    "visual_enhancers": {
+      "radius": "rounded-lg",
+      "shadows": {
+        "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
+        "floating": "shadow-xl shadow-slate-200/50"
+      },
+      "glassmorphism": "bg-white/80 backdrop-blur-md border border-white/20",
+      "gradients": {
+        "hero": "bg-gradient-to-br from-blue-50 to-indigo-50",
+        "subtle": "bg-gradient-to-b from-white to-slate-50"
+      }
+    }
+  },
+  "layout_strategies": {
+    "dashboard": {
+      "type": "bento_grid",
+      "grid_cols": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "gap": "gap-6",
+      "sidebar_width": "w-64"
+    },
+    "meeting_view": {
+      "type": "split_pane",
+      "left_panel": "w-full lg:w-2/3 overflow-y-auto",
+      "right_panel": "w-full lg:w-1/3 sticky top-4 h-[calc(100vh-2rem)]"
+    },
+    "landing_page": {
+      "type": "marketing_stack",
+      "hero_alignment": "text-center md:text-left",
+      "feature_grid": "grid-cols-1 md:grid-cols-3 gap-8"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium",
+      "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md"
+    },
+    "cards": {
+      "base": "bg-card text-card-foreground rounded-lg border shadow-sm p-6",
+      "interactive": "bg-card text-card-foreground rounded-lg border shadow-sm p-6 hover:border-primary/50 transition-colors cursor-pointer"
+    },
+    "inputs": {
+      "base": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "status_badges": {
+      "success": "bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "warning": "bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "neutral": "bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-xs font-medium"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_main": {
+        "url": "https://images.unsplash.com/photo-1758691736975-9f7f643d178e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwYnVzaW5lc3MlMjB0ZWFtJTIwbWVldGluZyUyMG1vZGVybiUyMG9mZmljZXxlbnwwfHx8fDE3Njg3MzQ2OTB8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Diverse business team in modern office hallway",
+        "usage": "Landing page hero section"
+      },
+      "feature_collaboration": {
+        "url": "https://images.unsplash.com/photo-1758691737217-77302c5f988f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxkaXZlcnNlJTIwYnVzaW5lc3MlMjB0ZWFtJTIwbWVldGluZyUyMG1vZGVybiUyMG9mZmljZXxlbnwwfHx8fDE3Njg3MzQ2OTB8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Coworkers collaborating in open space office",
+        "usage": "Features section - Collaboration"
+      },
+      "team_success": {
+        "url": "https://images.unsplash.com/photo-1758873269317-51888e824b28?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxkaXZlcnNlJTIwYnVzaW5lc3MlMjB0ZWFtJTIwbWVldGluZyUyMG1vZGVybiUyMG9mZmljZXxlbnwwfHx8fDE3Njg3MzQ2OTB8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Team high-fiving in meeting",
+        "usage": "About page or Success metrics"
+      },
+      "avatars": [
+        {
+          "url": "https://images.unsplash.com/photo-1651684215020-f7a5b6610f23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxzbWlsaW5nJTIwcHJvZmVzc2lvbmFsJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc2ODczNDcwOXww&ixlib=rb-4.1.0&q=85",
+          "alt": "Male professional headshot"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxzbWlsaW5nJTIwcHJvZmVzc2lvbmFsJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc2ODczNDcwOXww&ixlib=rb-4.1.0&q=85",
+          "alt": "Male professional in grey jacket"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1762522921456-cdfe882d36c3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHw0fHxzbWlsaW5nJTIwcHJvZmVzc2lvbmFsJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc2ODczNDcwOXww&ixlib=rb-4.1.0&q=85",
+          "alt": "Female professional headshot"
+        }
+      ],
+      "logos": [
+        {
+          "url": "https://images.unsplash.com/photo-1729830375022-b0248100c501?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxtaW5pbWFsJTIwYWJzdHJhY3QlMjBnZW9tZXRyaWMlMjBsb2dvJTIwZGVzaWduJTIwdmVjdG9yfGVufDB8fHx8MTc2ODczNDcxMnww&ixlib=rb-4.1.0&q=85",
+          "alt": "Abstract square logo"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1705453168890-6c244eb82942?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxtaW5pbWFsJTIwYWJzdHJhY3QlMjBnZW9tZXRyaWMlMjBsb2dvJTIwZGVzaWduJTIwdmVjdG9yfGVufDB8fHx8MTc2ODczNDcxMnww&ixlib=rb-4.1.0&q=85",
+          "alt": "Iconic circles logo"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1629100551267-cae95686d737?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwzfHxtaW5pbWFsJTIwYWJzdHJhY3QlMjBnZW9tZXRyaWMlMjBsb2dvJTIwZGVzaWduJTIwdmVjdG9yfGVufDB8fHx8MTc2ODczNDcxMnww&ixlib=rb-4.1.0&q=85",
+          "alt": "Letter Y logo"
+        }
+      ]
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width-2 w-5 h-5"
+    }
+  },
+  "instructions_to_main_agent": {
+    "general": [
+      "Use 'Manrope' for all headings and 'Public Sans' for body text. Import them via Google Fonts in index.css.",
+      "Implement a 'Light Mode' first approach. The dashboard sidebar should be dark (#0F172A) for contrast.",
+      "Use the 'Bento Grid' layout for the Dashboard overview.",
+      "Ensure all interactive elements have 'data-testid' attributes.",
+      "Use 'sonner' for all toast notifications.",
+      "Do not use gradients for text or backgrounds unless specified in 'visual_enhancers'."
+    ],
+    "specific_pages": {
+      "landing": "Create a high-conversion landing page with a sticky header, hero section with the 'hero_main' image, features grid, and a pricing section.",
+      "dashboard": "Sidebar navigation on the left. Top bar with search and profile. Main content area with summary widgets.",
+      "meeting_details": "Split view: Left side for the full transcript (scrollable), Right side for the AI Summary and Action Items (sticky).",
+      "record_meeting": "Center the recording interface. Use a visual waveform animation (CSS or Canvas) to indicate activity."
+    },
+    "accessibility": [
+      "Ensure all text meets APCA contrast standards.",
+      "All images must have descriptive alt text.",
+      "Interactive elements must be keyboard navigable."
+    ]
+  },
+  "universal_guidelines": [
+    "Avoid generic 'AI slop' aesthetics. No purple/teal gradients everywhere.",
+    "Use 2-3x more spacing than typical designs.",
+    "Every interaction needs micro-animations (hover, focus, active).",
+    "Do not center align the app container.",
+    "Use 'sonner' for toasts.",
+    "Components must use named exports."
+  ]
+}
