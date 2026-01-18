@@ -84,6 +84,7 @@ const LandingPage = () => {
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="nav-link" data-testid="nav-features">Features</a>
             <a href="#how-it-works" className="nav-link" data-testid="nav-how-it-works">How it Works</a>
+            <a href="#pricing" className="nav-link" data-testid="nav-pricing">Pricing</a>
           </nav>
           
           <Link to="/app" data-testid="get-started-btn">
