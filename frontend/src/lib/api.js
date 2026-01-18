@@ -12,7 +12,6 @@ const api = axios.create({
 
 // Meetings API
 export const meetingsApi = {
-  // Get all meetings
   getAll: async (search = "", limit = 50) => {
     const params = new URLSearchParams();
     if (search) params.append("search", search);
@@ -21,31 +20,26 @@ export const meetingsApi = {
     return response.data;
   },
 
-  // Get single meeting
   getById: async (id) => {
     const response = await api.get(`/meetings/${id}`);
     return response.data;
   },
 
-  // Create meeting
   create: async (data) => {
     const response = await api.post("/meetings", data);
     return response.data;
   },
 
-  // Update meeting
   update: async (id, data) => {
     const response = await api.put(`/meetings/${id}`, data);
     return response.data;
   },
 
-  // Delete meeting
   delete: async (id) => {
     const response = await api.delete(`/meetings/${id}`);
     return response.data;
   },
 
-  // Upload audio file
   uploadAudio: async (meetingId, file, onProgress) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -66,19 +60,16 @@ export const meetingsApi = {
     return response.data;
   },
 
-  // Transcribe meeting
   transcribe: async (meetingId) => {
     const response = await api.post(`/meetings/${meetingId}/transcribe`);
     return response.data;
   },
 
-  // Summarize meeting
   summarize: async (meetingId) => {
     const response = await api.post(`/meetings/${meetingId}/summarize`);
     return response.data;
   },
 
-  // Process meeting (upload + transcribe + summarize)
   process: async (title, description, file, onProgress) => {
     const formData = new FormData();
     formData.append("title", title);
@@ -106,6 +97,32 @@ export const meetingsApi = {
 export const statsApi = {
   get: async () => {
     const response = await api.get("/stats");
+    return response.data;
+  },
+};
+
+// Subscription API
+export const subscriptionApi = {
+  getPlans: async () => {
+    const response = await api.get("/subscription/plans");
+    return response.data;
+  },
+
+  createCheckout: async (planId, originUrl) => {
+    const response = await api.post("/subscription/checkout", {
+      plan_id: planId,
+      origin_url: originUrl,
+    });
+    return response.data;
+  },
+
+  getStatus: async (sessionId) => {
+    const response = await api.get(`/subscription/status/${sessionId}`);
+    return response.data;
+  },
+
+  getTransactions: async (limit = 50) => {
+    const response = await api.get(`/subscription/transactions?limit=${limit}`);
     return response.data;
   },
 };
