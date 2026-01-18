@@ -317,6 +317,13 @@ class SummaryAITester:
         self.test_root_endpoint()
         self.test_stats_endpoint()
         
+        # Test subscription endpoints
+        self.test_subscription_plans()
+        session_id = self.test_subscription_checkout()
+        if session_id:
+            self.test_subscription_status(session_id)
+        self.test_subscription_transactions()
+        
         # Test meeting CRUD operations
         meeting_id = self.test_create_meeting()
         self.test_get_meetings()
