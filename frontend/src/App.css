@@ -107,7 +107,8 @@
 
 /* Hero section */
 .hero-section {
-    @apply gradient-hero min-h-[600px] flex items-center;
+    @apply min-h-[600px] flex items-center;
+    background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 100%);
 }
 
 /* Navigation */
