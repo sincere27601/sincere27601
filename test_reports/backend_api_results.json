@@ -1,0 +1,147 @@
+{
+  "timestamp": "2026-01-18T11:20:21.718243",
+  "total_tests": 9,
+  "passed_tests": 8,
+  "success_rate": 88.88888888888889,
+  "test_details": [
+    {
+      "test": "Root API Endpoint",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Meeting Summary AI API"
+      }
+    },
+    {
+      "test": "Stats Endpoint",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "total_meetings": 0,
+        "completed_meetings": 0,
+        "pending_meetings": 0
+      }
+    },
+    {
+      "test": "Create Meeting",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
+        "title": "Test Meeting 112015",
+        "description": "This is a test meeting for API validation",
+        "transcript": "",
+        "summary": "",
+        "action_items": [],
+        "key_decisions": [],
+        "attendees": [
+          "test@example.com",
+          "user@example.com"
+        ],
+        "topics": [],
+        "duration_seconds": 0,
+        "audio_filename": "",
+        "status": "pending",
+        "created_at": "2026-01-18T11:20:15.492641Z",
+        "updated_at": "2026-01-18T11:20:15.492646Z"
+      }
+    },
+    {
+      "test": "Get Meetings List",
+      "success": true,
+      "details": "",
+      "response_data": [
+        {
+          "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
+          "title": "Test Meeting 112015",
+          "description": "This is a test meeting for API validation",
+          "transcript": "",
+          "summary": "",
+          "action_items": [],
+          "key_decisions": [],
+          "attendees": [
+            "test@example.com",
+            "user@example.com"
+          ],
+          "topics": [],
+          "duration_seconds": 0,
+          "audio_filename": "",
+          "status": "pending",
+          "created_at": "2026-01-18T11:20:15.492641Z",
+          "updated_at": "2026-01-18T11:20:15.492646Z"
+        }
+      ]
+    },
+    {
+      "test": "Get Meeting by ID",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
+        "title": "Test Meeting 112015",
+        "description": "This is a test meeting for API validation",
+        "transcript": "",
+        "summary": "",
+        "action_items": [],
+        "key_decisions": [],
+        "attendees": [
+          "test@example.com",
+          "user@example.com"
+        ],
+        "topics": [],
+        "duration_seconds": 0,
+        "audio_filename": "",
+        "status": "pending",
+        "created_at": "2026-01-18T11:20:15.492641Z",
+        "updated_at": "2026-01-18T11:20:15.492646Z"
+      }
+    },
+    {
+      "test": "Update Meeting",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
+        "title": "Updated Test Meeting 112015",
+        "description": "Updated description for test meeting",
+        "transcript": "",
+        "summary": "",
+        "action_items": [],
+        "key_decisions": [],
+        "attendees": [
+          "test@example.com",
+          "user@example.com"
+        ],
+        "topics": [],
+        "duration_seconds": 0,
+        "audio_filename": "",
+        "status": "pending",
+        "created_at": "2026-01-18T11:20:15.492641Z",
+        "updated_at": "2026-01-18T11:20:15.680764Z"
+      }
+    },
+    {
+      "test": "Upload Audio File",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Audio uploaded successfully",
+        "filename": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd_test_audio.wav"
+      }
+    },
+    {
+      "test": "Delete Meeting",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Meeting deleted successfully"
+      }
+    },
+    {
+      "test": "Process Meeting (Upload + Transcribe + Summarize)",
+      "success": false,
+      "details": "Expected 200, got 520 - {\"detail\":\"Processing failed: Failed to transcribe audio: litellm.BadRequestError: OpenAIException - litellm.BadRequestError: OpenAIException - Invalid file format. Supported formats: ['flac', 'm4a', ",
+      "response_data": null
+    }
+  ]
+}
