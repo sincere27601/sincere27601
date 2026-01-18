@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-01-18T11:20:21.718243",
-  "total_tests": 9,
-  "passed_tests": 8,
-  "success_rate": 88.88888888888889,
+  "timestamp": "2026-01-18T11:35:09.655348",
+  "total_tests": 13,
+  "passed_tests": 12,
+  "success_rate": 92.3076923076923,
   "test_details": [
     {
       "test": "Root API Endpoint",
@@ -17,9 +17,80 @@
       "success": true,
       "details": "",
       "response_data": {
-        "total_meetings": 0,
+        "total_meetings": 1,
         "completed_meetings": 0,
         "pending_meetings": 0
+      }
+    },
+    {
+      "test": "Get Subscription Plans",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "plans": [
+          {
+            "id": "monthly",
+            "name": "Monthly Plan",
+            "price": 9.99,
+            "interval": "month",
+            "description": "Unlimited meetings, transcriptions & summaries"
+          },
+          {
+            "id": "yearly",
+            "name": "Yearly Plan",
+            "price": 79.99,
+            "interval": "year",
+            "description": "Unlimited meetings, transcriptions & summaries (Save $40!)"
+          }
+        ]
+      }
+    },
+    {
+      "test": "Create Subscription Checkout",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "checkout_url": "https://checkout.stripe.com/c/pay/cs_test_a1X5vdOx7r32yNoxh56ogknk2SopOzr01qQVM0O89gtFtiVPDEaOaTcr6g#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPyd1blpxYHZxWjA0V2xNPFFDY05KQ1c2RlRQamt%2FU0s1YFV8NmtsYkY9dURnXDJEdVxNUHZQUWxCYUZIYGJ9VnxtfE1DcXR2bjNUNG08SEhWaDd3NFdgSlBLfG5KMz1KNDNjNTU0fWZjX3VLZicpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
+        "session_id": "cs_test_a1X5vdOx7r32yNoxh56ogknk2SopOzr01qQVM0O89gtFtiVPDEaOaTcr6g"
+      }
+    },
+    {
+      "test": "Get Subscription Status",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "status": "open",
+        "payment_status": "unpaid",
+        "amount": 9.99,
+        "currency": "usd",
+        "plan_id": "monthly",
+        "plan_name": "Monthly Plan"
+      }
+    },
+    {
+      "test": "Get Payment Transactions",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "transactions": [
+          {
+            "id": "b394a6d6-268a-49a3-bac1-1dc6b63d1a6d",
+            "session_id": "cs_test_a1X5vdOx7r32yNoxh56ogknk2SopOzr01qQVM0O89gtFtiVPDEaOaTcr6g",
+            "plan_id": "monthly",
+            "plan_name": "Monthly Plan",
+            "amount": 9.99,
+            "currency": "usd",
+            "payment_status": "unpaid",
+            "status": "open",
+            "metadata": {
+              "plan_id": "monthly",
+              "plan_name": "Monthly Plan",
+              "interval": "month"
+            },
+            "created_at": "2026-01-18T11:35:02.345933+00:00",
+            "updated_at": "2026-01-18T11:35:02.581821+00:00"
+          }
+        ]
       }
     },
     {
@@ -27,8 +98,8 @@
       "success": true,
       "details": "",
       "response_data": {
-        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
-        "title": "Test Meeting 112015",
+        "id": "989e6ac9-332d-47ef-b501-af4e62eae723",
+        "title": "Test Meeting 113502",
         "description": "This is a test meeting for API validation",
         "transcript": "",
         "summary": "",
@@ -42,8 +113,8 @@
         "duration_seconds": 0,
         "audio_filename": "",
         "status": "pending",
-        "created_at": "2026-01-18T11:20:15.492641Z",
-        "updated_at": "2026-01-18T11:20:15.492646Z"
+        "created_at": "2026-01-18T11:35:02.653644Z",
+        "updated_at": "2026-01-18T11:35:02.653648Z"
       }
     },
     {
@@ -52,8 +123,8 @@
       "details": "",
       "response_data": [
         {
-          "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
-          "title": "Test Meeting 112015",
+          "id": "989e6ac9-332d-47ef-b501-af4e62eae723",
+          "title": "Test Meeting 113502",
           "description": "This is a test meeting for API validation",
           "transcript": "",
           "summary": "",
@@ -67,8 +138,24 @@
           "duration_seconds": 0,
           "audio_filename": "",
           "status": "pending",
-          "created_at": "2026-01-18T11:20:15.492641Z",
-          "updated_at": "2026-01-18T11:20:15.492646Z"
+          "created_at": "2026-01-18T11:35:02.653644Z",
+          "updated_at": "2026-01-18T11:35:02.653648Z"
+        },
+        {
+          "id": "c8e879be-8d1c-44df-9c50-62c15d48c17f",
+          "title": "Processed Test Meeting 112015",
+          "description": "Test meeting processed via API",
+          "transcript": "",
+          "summary": "",
+          "action_items": [],
+          "key_decisions": [],
+          "attendees": [],
+          "topics": [],
+          "duration_seconds": 0,
+          "audio_filename": "c8e879be-8d1c-44df-9c50-62c15d48c17f_test_meeting.wav",
+          "status": "error",
+          "created_at": "2026-01-18T11:20:15.797611Z",
+          "updated_at": "2026-01-18T11:20:21.713103Z"
         }
       ]
     },
@@ -77,8 +164,8 @@
       "success": true,
       "details": "",
       "response_data": {
-        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
-        "title": "Test Meeting 112015",
+        "id": "989e6ac9-332d-47ef-b501-af4e62eae723",
+        "title": "Test Meeting 113502",
         "description": "This is a test meeting for API validation",
         "transcript": "",
         "summary": "",
@@ -92,8 +179,8 @@
         "duration_seconds": 0,
         "audio_filename": "",
         "status": "pending",
-        "created_at": "2026-01-18T11:20:15.492641Z",
-        "updated_at": "2026-01-18T11:20:15.492646Z"
+        "created_at": "2026-01-18T11:35:02.653644Z",
+        "updated_at": "2026-01-18T11:35:02.653648Z"
       }
     },
     {
@@ -101,8 +188,8 @@
       "success": true,
       "details": "",
       "response_data": {
-        "id": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd",
-        "title": "Updated Test Meeting 112015",
+        "id": "989e6ac9-332d-47ef-b501-af4e62eae723",
+        "title": "Updated Test Meeting 113502",
         "description": "Updated description for test meeting",
         "transcript": "",
         "summary": "",
@@ -116,8 +203,8 @@
         "duration_seconds": 0,
         "audio_filename": "",
         "status": "pending",
-        "created_at": "2026-01-18T11:20:15.492641Z",
-        "updated_at": "2026-01-18T11:20:15.680764Z"
+        "created_at": "2026-01-18T11:35:02.653644Z",
+        "updated_at": "2026-01-18T11:35:02.768177Z"
       }
     },
     {
@@ -126,7 +213,7 @@
       "details": "",
       "response_data": {
         "message": "Audio uploaded successfully",
-        "filename": "91d3df5e-24d3-4bd9-8806-a99d09ed6fdd_test_audio.wav"
+        "filename": "989e6ac9-332d-47ef-b501-af4e62eae723_test_audio.wav"
       }
     },
     {
