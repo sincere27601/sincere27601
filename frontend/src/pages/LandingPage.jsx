@@ -9,7 +9,9 @@ import {
   ArrowRight,
   Play,
   Upload,
-  FileSearch
+  FileSearch,
+  Check,
+  Star
 } from "lucide-react";
 
 const features = [
