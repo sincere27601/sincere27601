@@ -1,7 +1,7 @@
 # Summary AI - Meeting Summary Application
 
 ## Original Problem Statement
-Build a summary AI app that records meetings and summarizes them for business overview - Replica of Summary AI app.
+Build a summary AI app that records meetings and summarizes them for business overview - Replica of Summary AI app. Added Stripe payment integration with monthly and yearly subscriptions.
 
 ## Architecture & Tech Stack
 - **Frontend**: React with Tailwind CSS, Shadcn/UI components
@@ -10,6 +10,7 @@ Build a summary AI app that records meetings and summarizes them for business ov
 - **AI Services**: 
   - OpenAI Whisper (speech-to-text transcription)
   - GPT-5.2 (meeting summarization)
+- **Payments**: Stripe (subscriptions)
 - **Authentication**: None (open access)
 
 ## User Personas
@@ -25,6 +26,7 @@ Build a summary AI app that records meetings and summarizes them for business ov
 - Extract action items, key decisions, and topics
 - Meeting history with search functionality
 - Export summaries as text files
+- Subscription payments via Stripe
 
 ## What's Been Implemented (December 2025)
 
@@ -35,14 +37,25 @@ Build a summary AI app that records meetings and summarizes them for business ov
 - Summarization endpoint (GPT-5.2 integration)
 - Combined process endpoint (upload + transcribe + summarize)
 - Dashboard statistics endpoint
+- **NEW: Subscription Plans API**
+- **NEW: Stripe Checkout Session API**
+- **NEW: Payment Status Polling API**
+- **NEW: Stripe Webhook Handler**
+- **NEW: Payment Transactions Collection**
 
 ### Frontend Pages
-1. **Landing Page** - Hero section, features, how it works, CTA
+1. **Landing Page** - Hero section, features, how it works, CTA, **pricing section**
 2. **Dashboard** - Quick actions, stats, recent meetings
 3. **Record Meeting** - Browser audio recording with waveform visualizer
 4. **Upload Meeting** - Drag & drop file upload
 5. **Meeting Details** - Split view transcript + summary
 6. **Meeting History** - List with search and filter
+7. **NEW: Pricing Page** - Monthly ($9.99) & Yearly ($79.99) subscription plans
+8. **NEW: Subscription Success** - Payment confirmation with polling
+
+### Subscription Plans
+- **Monthly**: $9.99/month
+- **Yearly**: $79.99/year (Save $40!)
 
 ### Design System
 - Typography: Manrope (headings), Public Sans (body)
@@ -51,16 +64,17 @@ Build a summary AI app that records meetings and summarizes them for business ov
 
 ## Prioritized Backlog
 
-### P0 (Critical)
+### P0 (Critical) - DONE
 - ✅ Core recording functionality
 - ✅ File upload functionality
 - ✅ Transcription integration
 - ✅ Summarization integration
 - ✅ Meeting history
+- ✅ Stripe subscription payments
 
 ### P1 (High Priority)
 - User authentication
-- Team/workspace support
+- Link subscriptions to user accounts
 - PDF export
 - Email summary sharing
 
@@ -72,6 +86,6 @@ Build a summary AI app that records meetings and summarizes them for business ov
 
 ## Next Tasks
 1. Add user authentication (JWT or social login)
-2. Implement PDF export for summaries
-3. Add email sharing functionality
-4. Improve error handling for AI failures
+2. Link subscription status to user accounts
+3. Implement PDF export for summaries
+4. Add email sharing functionality
