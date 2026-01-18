@@ -78,7 +78,7 @@ const LandingPage = () => {
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl font-['Manrope'] text-slate-900">SummaryAI</span>
+            <span className="font-bold text-xl font-['Manrope'] text-slate-900">SummaryBoss</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">
@@ -258,7 +258,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-[#0F172A]" data-testid="cta-section">
+      <section className="py-20 px-6 bg-[#064E3B]" data-testid="cta-section">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white font-['Manrope'] mb-6">
             Ready to Transform Your Meetings?
@@ -343,17 +343,17 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 py-12 px-6" data-testid="footer">
+      <footer className="bg-[#022C22] py-12 px-6" data-testid="footer">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-xl font-['Manrope'] text-white">SummaryAI</span>
+              <span className="font-bold text-xl font-['Manrope'] text-white">SummaryBoss</span>
             </div>
             <p className="text-slate-400 text-sm">
-              © 2025 SummaryAI. All rights reserved.
+              © 2025 SummaryBoss. All rights reserved.
             </p>
           </div>
         </div>

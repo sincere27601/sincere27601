@@ -30,14 +30,14 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-[#0F172A] text-slate-100 flex flex-col" data-testid="sidebar">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-[#064E3B] text-slate-100 flex flex-col" data-testid="sidebar">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
         <Link to="/" className="flex items-center gap-3" data-testid="sidebar-logo">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
             <FileText className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-xl font-['Manrope']">SummaryAI</span>
+          <span className="font-bold text-xl font-['Manrope']">SummaryBoss</span>
         </Link>
       </div>
 

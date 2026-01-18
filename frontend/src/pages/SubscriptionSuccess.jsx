@@ -90,7 +90,7 @@ const SubscriptionSuccess = () => {
               <div className="flex items-center justify-center gap-2 mb-2">
                 <PartyPopper className="w-6 h-6 text-amber-500" />
                 <h2 className="text-2xl font-bold text-slate-900 font-['Manrope']">
-                  Welcome to SummaryAI Pro!
+                  Welcome to SummaryBoss Pro!
                 </h2>
                 <PartyPopper className="w-6 h-6 text-amber-500" />
               </div>
