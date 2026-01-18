@@ -78,7 +78,7 @@ const LandingPage = () => {
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl font-['Manrope'] text-slate-900">SummaryBoss</span>
+            <span className="font-bold text-xl font-['Manrope'] text-slate-900">Summary Boss</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">
@@ -350,10 +350,10 @@ const LandingPage = () => {
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-xl font-['Manrope'] text-white">SummaryBoss</span>
+              <span className="font-bold text-xl font-['Manrope'] text-white">Summary Boss</span>
             </div>
             <p className="text-slate-400 text-sm">
-              © 2025 SummaryBoss. All rights reserved.
+              © 2025 Summary Boss. All rights reserved.
             </p>
           </div>
         </div>
