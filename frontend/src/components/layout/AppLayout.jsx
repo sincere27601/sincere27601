@@ -6,7 +6,6 @@ import {
   History, 
   FileText,
   LogOut,
-  CreditCard,
   ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,7 +15,6 @@ const navigation = [
   { name: "Record Meeting", href: "/app/record", icon: Mic },
   { name: "Upload Audio", href: "/app/upload", icon: Upload },
   { name: "Meeting History", href: "/app/history", icon: History },
-  { name: "Subscription", href: "/app/subscription", icon: CreditCard },
 ];
 
 export const Sidebar = () => {
