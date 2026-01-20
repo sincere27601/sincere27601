@@ -284,14 +284,15 @@ const AudioWaveform = ({ audioUrl, filename }) => {
       </div>
 
       {/* Hidden audio element */}
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleEnded}
-        crossOrigin="use-credentials"
-        className="hidden"
-      />
+      {audioBlobUrl && (
+        <audio
+          ref={audioRef}
+          src={audioBlobUrl}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={handleEnded}
+          className="hidden"
+        />
+      )}
     </div>
   );
 };
