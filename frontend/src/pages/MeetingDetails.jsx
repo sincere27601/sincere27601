@@ -29,7 +29,8 @@ import {
   Lightbulb,
   Target,
   Tag,
-  RefreshCw
+  RefreshCw,
+  Briefcase
 } from "lucide-react";
 import { meetingsApi } from "@/lib/api";
 import { toast } from "sonner";
