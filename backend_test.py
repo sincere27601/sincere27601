@@ -420,7 +420,7 @@ class SummaryBossAuthTester:
 
 def main():
     """Main test execution"""
-    tester = SummaryAITester()
+    tester = SummaryBossAuthTester()
     
     try:
         success = tester.run_all_tests()
