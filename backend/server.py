@@ -15,6 +15,7 @@ import httpx
 import bcrypt
 from emergentintegrations.llm.openai import OpenAISpeechToText
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -43,6 +44,33 @@ logger = logging.getLogger(__name__)
 
 # Session expiry duration
 SESSION_EXPIRY_DAYS = 7
+
+# Valid referral codes for lifetime access
+VALID_REFERRAL_CODES = {
+    "Gillian": {"type": "lifetime", "description": "Lifetime free access"},
+    "gillian": {"type": "lifetime", "description": "Lifetime free access"},
+    "GILLIAN": {"type": "lifetime", "description": "Lifetime free access"},
+}
+
+# Subscription Plans
+SUBSCRIPTION_PLANS = {
+    "weekly": {
+        "id": "weekly",
+        "name": "Weekly Plan",
+        "price": 7.00,
+        "interval": "week",
+        "description": "Billed weekly - cancel anytime",
+        "trial_days": 3
+    },
+    "yearly": {
+        "id": "yearly",
+        "name": "Yearly Plan",
+        "price": 78.00,
+        "interval": "year",
+        "description": "Best value - save over 40%!",
+        "trial_days": 3
+    }
+}
 
 
 # ============== MODELS ==============
