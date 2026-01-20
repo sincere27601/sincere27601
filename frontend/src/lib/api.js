@@ -8,7 +8,36 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Important for cookies
 });
+
+// Auth API
+export const authApi = {
+  register: async (email, password, name) => {
+    const response = await api.post("/auth/register", { email, password, name });
+    return response.data;
+  },
+
+  login: async (email, password) => {
+    const response = await api.post("/auth/login", { email, password });
+    return response.data;
+  },
+
+  googleSession: async (sessionId) => {
+    const response = await api.post("/auth/google/session", { session_id: sessionId });
+    return response.data;
+  },
+
+  getMe: async () => {
+    const response = await api.get("/auth/me");
+    return response.data;
+  },
+
+  logout: async () => {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  },
+};
 
 // Meetings API
 export const meetingsApi = {
@@ -97,32 +126,6 @@ export const meetingsApi = {
 export const statsApi = {
   get: async () => {
     const response = await api.get("/stats");
-    return response.data;
-  },
-};
-
-// Subscription API
-export const subscriptionApi = {
-  getPlans: async () => {
-    const response = await api.get("/subscription/plans");
-    return response.data;
-  },
-
-  createCheckout: async (planId, originUrl) => {
-    const response = await api.post("/subscription/checkout", {
-      plan_id: planId,
-      origin_url: originUrl,
-    });
-    return response.data;
-  },
-
-  getStatus: async (sessionId) => {
-    const response = await api.get(`/subscription/status/${sessionId}`);
-    return response.data;
-  },
-
-  getTransactions: async (limit = 50) => {
-    const response = await api.get(`/subscription/transactions?limit=${limit}`);
     return response.data;
   },
 };
