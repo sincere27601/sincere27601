@@ -387,6 +387,110 @@ async def get_me(request: Request):
     return user
 
 
+@api_router.put("/auth/profile")
+async def update_profile(request: Request, profile_data: ProfileUpdateRequest):
+    """Update user profile"""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    update_data = {}
+    if profile_data.name is not None:
+        update_data["name"] = profile_data.name
+    if profile_data.picture is not None:
+        update_data["picture"] = profile_data.picture
+    
+    if update_data:
+        await db.users.update_one({"user_id": user["user_id"]}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
+    return updated_user
+
+
+@api_router.post("/auth/change-password")
+async def change_password(request: Request, password_data: PasswordChangeRequest):
+    """Change password for authenticated user"""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Get user with password hash
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    
+    if not user_doc.get("password_hash"):
+        raise HTTPException(status_code=400, detail="This account uses Google Sign-In. Password cannot be changed.")
+    
+    if not verify_password(password_data.current_password, user_doc["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    new_hash = hash_password(password_data.new_password)
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": {"password_hash": new_hash}})
+    
+    return {"message": "Password changed successfully"}
+
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: PasswordResetRequest):
+    """Request password reset"""
+    user_doc = await db.users.find_one({"email": request.email}, {"_id": 0})
+    
+    # Always return success to prevent email enumeration
+    if not user_doc:
+        return {"message": "If an account exists with this email, a reset link has been sent."}
+    
+    if not user_doc.get("password_hash"):
+        return {"message": "If an account exists with this email, a reset link has been sent."}
+    
+    # Create reset token
+    reset = PasswordReset(user_id=user_doc["user_id"])
+    reset_doc = reset.model_dump()
+    reset_doc['expires_at'] = reset_doc['expires_at'].isoformat()
+    reset_doc['created_at'] = reset_doc['created_at'].isoformat()
+    await db.password_resets.insert_one(reset_doc)
+    
+    # In production, send email with reset link
+    # For now, return the token (in production, this would be sent via email)
+    logger.info(f"Password reset token for {request.email}: {reset.token}")
+    
+    return {
+        "message": "If an account exists with this email, a reset link has been sent.",
+        "reset_token": reset.token  # Remove this in production - only for testing
+    }
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: PasswordResetConfirm):
+    """Reset password with token"""
+    reset_doc = await db.password_resets.find_one({"token": request.token, "used": False}, {"_id": 0})
+    
+    if not reset_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Check expiry
+    expires_at = reset_doc.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    if len(request.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Update password
+    new_hash = hash_password(request.new_password)
+    await db.users.update_one({"user_id": reset_doc["user_id"]}, {"$set": {"password_hash": new_hash}})
+    
+    # Mark token as used
+    await db.password_resets.update_one({"token": request.token}, {"$set": {"used": True}})
+    
+    return {"message": "Password reset successfully. You can now login with your new password."}
+
+
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
     """Logout - delete session and clear cookie"""
