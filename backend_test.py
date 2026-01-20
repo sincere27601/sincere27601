@@ -38,13 +38,19 @@ class SummaryBossAuthTester:
             "response_data": response_data
         })
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, files=None, use_auth=False):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         headers = {}
         
+        # Add authentication if required
+        if use_auth and self.session_token:
+            headers['Authorization'] = f'Bearer {self.session_token}'
+        
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {url}")
+        if use_auth:
+            print(f"   Auth: {'Yes' if self.session_token else 'No token available'}")
         
         try:
             if method == 'GET':
