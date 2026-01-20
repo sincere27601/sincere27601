@@ -660,6 +660,313 @@ async def logout(request: Request, response: Response):
     return {"message": "Logged out successfully"}
 
 
+# ============== PROMO CODE & SUBSCRIPTION ENDPOINTS ==============
+
+@api_router.post("/promo/apply")
+async def apply_promo_code(promo_request: PromoCodeRequest, user: dict = Depends(require_auth)):
+    """Apply a promo code for lifetime access"""
+    code = promo_request.code.strip()
+    
+    # Check if user already has lifetime access
+    if user.get("subscription_status") == "lifetime":
+        raise HTTPException(status_code=400, detail="You already have lifetime access")
+    
+    # Validate promo code (case-insensitive check for "Gillian")
+    if code.lower() != "gillian":
+        raise HTTPException(status_code=400, detail="Invalid promo code")
+    
+    # Apply lifetime access
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {
+            "subscription_status": "lifetime",
+            "promo_code_used": code
+        }}
+    )
+    
+    return {
+        "message": "Promo code applied successfully! You now have lifetime free access.",
+        "subscription_status": "lifetime"
+    }
+
+
+@api_router.get("/subscription/plans")
+async def get_subscription_plans():
+    """Get all available subscription plans"""
+    return {"plans": list(SUBSCRIPTION_PLANS.values())}
+
+
+@api_router.get("/subscription/status")
+async def get_subscription_status(user: dict = Depends(require_auth)):
+    """Get current user's subscription status"""
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    status = await check_user_subscription(user_doc)
+    status["referral_code"] = user_doc.get("referral_code")
+    status["referral_earnings"] = user_doc.get("referral_earnings", 0)
+    return status
+
+
+@api_router.post("/subscription/checkout")
+async def create_subscription_checkout(request: Request, checkout_request: SubscriptionCheckoutRequest, user: dict = Depends(require_auth)):
+    """Create a Stripe checkout session for subscription with 3-day free trial"""
+    
+    # Validate plan
+    if checkout_request.plan_id not in SUBSCRIPTION_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid subscription plan")
+    
+    plan = SUBSCRIPTION_PLANS[checkout_request.plan_id]
+    
+    # Check if user already has active subscription
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    sub_status = await check_user_subscription(user_doc)
+    if sub_status.get("has_access") and sub_status.get("status") in ["active", "lifetime"]:
+        raise HTTPException(status_code=400, detail="You already have an active subscription")
+    
+    # Get Stripe API key
+    stripe_api_key = os.environ.get('STRIPE_API_KEY')
+    if not stripe_api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    # Build URLs from provided origin
+    origin_url = checkout_request.origin_url.rstrip('/')
+    success_url = f"{origin_url}/app/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin_url}/app/subscription"
+    
+    # Initialize Stripe
+    host_url = str(request.base_url).rstrip('/')
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+    
+    try:
+        # Create checkout session with trial
+        checkout_req = CheckoutSessionRequest(
+            amount=float(plan["price"]),
+            currency="usd",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "user_id": user["user_id"],
+                "plan_id": plan["id"],
+                "plan_name": plan["name"],
+                "interval": plan["interval"],
+                "trial_days": str(plan.get("trial_days", 3))
+            }
+        )
+        
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_req)
+        
+        # Create payment transaction record
+        transaction = PaymentTransaction(
+            user_id=user["user_id"],
+            session_id=session.session_id,
+            plan_id=plan["id"],
+            plan_name=plan["name"],
+            amount=float(plan["price"]),
+            currency="usd",
+            is_trial=True,
+            payment_status="pending",
+            status="initiated",
+            metadata={
+                "plan_id": plan["id"],
+                "plan_name": plan["name"],
+                "interval": plan["interval"],
+                "trial_days": str(plan.get("trial_days", 3))
+            }
+        )
+        
+        doc = transaction.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        
+        await db.payment_transactions.insert_one(doc)
+        
+        # Start 3-day trial immediately when they add card
+        trial_end = datetime.now(timezone.utc) + timedelta(days=3)
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {
+                "subscription_status": "trial",
+                "subscription_plan": plan["id"],
+                "trial_expires_at": trial_end.isoformat()
+            }}
+        )
+        
+        return {
+            "checkout_url": session.url,
+            "session_id": session.session_id,
+            "trial_days": plan.get("trial_days", 3)
+        }
+        
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout session: {str(e)}")
+
+
+@api_router.get("/subscription/status/{session_id}")
+async def get_payment_status(request: Request, session_id: str, user: dict = Depends(require_auth)):
+    """Check the status of a subscription payment"""
+    
+    # Check if already processed
+    existing = await db.payment_transactions.find_one({"session_id": session_id, "user_id": user["user_id"]}, {"_id": 0})
+    
+    if existing and existing.get("payment_status") == "paid":
+        return {
+            "status": "complete",
+            "payment_status": "paid",
+            "plan_id": existing.get("plan_id"),
+            "plan_name": existing.get("plan_name"),
+            "amount": existing.get("amount")
+        }
+    
+    # Get Stripe API key
+    stripe_api_key = os.environ.get('STRIPE_API_KEY')
+    if not stripe_api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    # Initialize Stripe
+    host_url = str(request.base_url).rstrip('/')
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+    
+    try:
+        checkout_status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+        
+        # Update transaction in database
+        update_data = {
+            "status": checkout_status.status,
+            "payment_status": checkout_status.payment_status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": update_data}
+        )
+        
+        # If paid, activate subscription and process referral
+        if checkout_status.payment_status == "paid":
+            transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+            plan_id = transaction.get("plan_id") if transaction else None
+            
+            # Calculate subscription end date
+            if plan_id == "weekly":
+                sub_end = datetime.now(timezone.utc) + timedelta(days=7)
+            else:  # yearly
+                sub_end = datetime.now(timezone.utc) + timedelta(days=365)
+            
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {
+                    "subscription_status": "active",
+                    "subscription_plan": plan_id,
+                    "subscription_expires_at": sub_end.isoformat(),
+                    "trial_expires_at": None
+                }}
+            )
+            
+            # Process referral bonus for yearly plan
+            if plan_id == "yearly":
+                user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+                if user_doc.get("referred_by"):
+                    # Update referral to qualified
+                    await db.referrals.update_one(
+                        {"referred_user_id": user["user_id"], "status": "pending"},
+                        {"$set": {
+                            "status": "qualified",
+                            "qualified_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    # Add $50 to referrer's earnings
+                    await db.users.update_one(
+                        {"user_id": user_doc["referred_by"]},
+                        {"$inc": {"referral_earnings": 50.0}}
+                    )
+        
+        return {
+            "status": checkout_status.status,
+            "payment_status": checkout_status.payment_status,
+            "amount": checkout_status.amount_total / 100 if checkout_status.amount_total else 0,
+            "currency": checkout_status.currency,
+            "plan_id": existing.get("plan_id") if existing else None,
+            "plan_name": existing.get("plan_name") if existing else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Status check error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to check payment status: {str(e)}")
+
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks"""
+    
+    stripe_api_key = os.environ.get('STRIPE_API_KEY')
+    if not stripe_api_key:
+        return {"status": "error", "message": "Stripe not configured"}
+    
+    host_url = str(request.base_url).rstrip('/')
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+    
+    try:
+        body = await request.body()
+        signature = request.headers.get("Stripe-Signature")
+        
+        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        
+        if webhook_response:
+            # Update payment transaction
+            await db.payment_transactions.update_one(
+                {"session_id": webhook_response.session_id},
+                {"$set": {
+                    "status": webhook_response.event_type,
+                    "payment_status": webhook_response.payment_status,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        return {"status": "success"}
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+# ============== REFERRAL ENDPOINTS ==============
+
+@api_router.get("/referrals")
+async def get_referrals(user: dict = Depends(require_auth)):
+    """Get user's referral info and history"""
+    user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    
+    # Get referrals made by this user
+    referrals = await db.referrals.find(
+        {"referrer_user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {
+        "referral_code": user_doc.get("referral_code"),
+        "total_earnings": user_doc.get("referral_earnings", 0),
+        "referrals": referrals,
+        "referral_reward": 50.0,
+        "referral_condition": "Friend signs up for yearly plan"
+    }
+
+
+@api_router.get("/referrals/validate/{code}")
+async def validate_referral_code(code: str):
+    """Validate a referral code"""
+    referrer = await db.users.find_one({"referral_code": code}, {"_id": 0, "password_hash": 0})
+    if not referrer:
+        raise HTTPException(status_code=404, detail="Invalid referral code")
+    
+    return {
+        "valid": True,
+        "referrer_name": referrer.get("name", "").split()[0] if referrer.get("name") else "Someone"
+    }
+
+
 # ============== MEETING ENDPOINTS ==============
 
 def serialize_meeting(meeting: dict) -> dict:
