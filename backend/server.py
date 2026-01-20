@@ -151,7 +151,7 @@ class Meeting(BaseModel):
     topics: Optional[List[str]] = []
     duration_seconds: Optional[int] = 0
     audio_filename: Optional[str] = ""
-    audio_url: Optional[str] = ""  # Cloud storage URL
+    audio_file_id: Optional[str] = ""  # GridFS file ID for cloud storage
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
