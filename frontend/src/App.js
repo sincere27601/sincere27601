@@ -17,6 +17,8 @@ import UploadMeeting from "@/pages/UploadMeeting";
 import MeetingDetails from "@/pages/MeetingDetails";
 import MeetingHistory from "@/pages/MeetingHistory";
 import ProfilePage from "@/pages/ProfilePage";
+import SubscriptionPage from "@/pages/SubscriptionPage";
+import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 
 // Layout
 import AppLayout from "@/components/layout/AppLayout";
@@ -49,6 +51,8 @@ const AppRouter = () => {
         <Route path="meeting/:id" element={<MeetingDetails />} />
         <Route path="history" element={<MeetingHistory />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="subscription" element={<SubscriptionPage />} />
+        <Route path="subscription/success" element={<SubscriptionSuccess />} />
       </Route>
     </Routes>
   );
