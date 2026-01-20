@@ -84,9 +84,9 @@ const LandingPage = () => {
             <a href="#how-it-works" className="nav-link" data-testid="nav-how-it-works">How it Works</a>
           </nav>
           
-          <Link to="/app" data-testid="get-started-btn">
+          <Link to="/login" data-testid="get-started-btn">
             <Button className="bg-primary hover:bg-primary/90">
-              Get Started
+              Sign In
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
@@ -107,16 +107,16 @@ const LandingPage = () => {
                 Get key decisions, action items, and topics extracted automatically.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/app/record" data-testid="cta-record">
+                <Link to="/login" data-testid="cta-record">
                   <Button size="lg" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                     <Mic className="w-5 h-5 mr-2" />
-                    Start Recording
+                    Get Started Free
                   </Button>
                 </Link>
-                <Link to="/app/upload" data-testid="cta-upload">
+                <Link to="/register" data-testid="cta-upload">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     <Upload className="w-5 h-5 mr-2" />
-                    Upload Audio
+                    Create Account
                   </Button>
                 </Link>
               </div>
@@ -263,7 +263,7 @@ const LandingPage = () => {
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
             Start recording and summarizing your meetings today. Completely free!
           </p>
-          <Link to="/app" data-testid="cta-get-started-bottom">
+          <Link to="/register" data-testid="cta-get-started-bottom">
             <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
               Get Started Free
               <ArrowRight className="w-5 h-5 ml-2" />
