@@ -7,7 +7,8 @@ import {
   Loader2,
   PartyPopper,
   ArrowRight,
-  XCircle
+  XCircle,
+  Clock
 } from "lucide-react";
 import { subscriptionApi } from "@/lib/api";
 
@@ -36,7 +37,7 @@ const SubscriptionSuccess = () => {
     }
 
     try {
-      const data = await subscriptionApi.getStatus(sessionId);
+      const data = await subscriptionApi.getPaymentStatus(sessionId);
       setPaymentData(data);
 
       if (data.payment_status === "paid") {
@@ -68,7 +69,7 @@ const SubscriptionSuccess = () => {
                 Processing Payment...
               </h2>
               <p className="text-slate-500">
-                Please wait while we confirm your payment.
+                Please wait while we confirm your subscription.
               </p>
             </div>
           </CardContent>
@@ -95,7 +96,7 @@ const SubscriptionSuccess = () => {
                 <PartyPopper className="w-6 h-6 text-amber-500" />
               </div>
               <p className="text-slate-500">
-                Your subscription has been activated successfully.
+                Your subscription is now active. Start summarizing your meetings!
               </p>
             </div>
 
@@ -120,6 +121,15 @@ const SubscriptionSuccess = () => {
                 </div>
               </div>
             )}
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-amber-800">
+                <Clock className="w-5 h-5" />
+                <p className="text-sm font-medium">
+                  Your 3-day free trial has started! You won't be charged until the trial ends.
+                </p>
+              </div>
+            </div>
 
             <div className="space-y-3">
               <Link to="/app" className="block">
