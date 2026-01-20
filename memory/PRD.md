@@ -23,6 +23,7 @@ Build a "Summary AI" app that records meetings and summarizes them for business 
 - **Frontend**: React with Tailwind CSS, Shadcn/UI components
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
+- **File Storage**: MongoDB GridFS (audio files stored in database)
 - **AI Services**: 
   - OpenAI Whisper (speech-to-text transcription)
   - GPT-5.2 (meeting summarization)
