@@ -37,6 +37,32 @@ export const authApi = {
     const response = await api.post("/auth/logout");
     return response.data;
   },
+
+  updateProfile: async (data) => {
+    const response = await api.put("/auth/profile", data);
+    return response.data;
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.post("/auth/change-password", {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post("/auth/forgot-password", { email });
+    return response.data;
+  },
+
+  resetPassword: async (token, newPassword) => {
+    const response = await api.post("/auth/reset-password", {
+      token,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
 };
 
 // Meetings API
