@@ -335,25 +335,63 @@ async def require_auth(request: Request) -> dict:
 
 # ============== AUTH ENDPOINTS ==============
 
+class RegisterWithReferralRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    referral_code: Optional[str] = None
+
+
 @api_router.post("/auth/register")
-async def register(request: RegisterRequest, response: Response):
-    """Register with email and password"""
+async def register(request: RegisterWithReferralRequest, response: Response):
+    """Register with email and password, optionally with referral code"""
     # Check if email exists
     existing = await db.users.find_one({"email": request.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
+    # Check referral code if provided
+    referred_by = None
+    if request.referral_code:
+        referrer = await db.users.find_one({"referral_code": request.referral_code}, {"_id": 0})
+        if referrer:
+            referred_by = referrer["user_id"]
+    
+    # Create user with their own referral code
     user = User(
         email=request.email,
         name=request.name,
         auth_provider="email",
-        password_hash=hash_password(request.password)
+        password_hash=hash_password(request.password),
+        referred_by=referred_by
     )
     
+    # Generate unique referral code for this user
+    user_referral_code = generate_referral_code(user.user_id)
+    
     user_doc = user.model_dump()
+    user_doc['referral_code'] = user_referral_code
     user_doc['created_at'] = user_doc['created_at'].isoformat()
+    if user_doc.get('subscription_expires_at'):
+        user_doc['subscription_expires_at'] = user_doc['subscription_expires_at'].isoformat()
+    if user_doc.get('trial_expires_at'):
+        user_doc['trial_expires_at'] = user_doc['trial_expires_at'].isoformat()
     await db.users.insert_one(user_doc)
+    
+    # Create referral record if referred
+    if referred_by:
+        referral = Referral(
+            referrer_user_id=referred_by,
+            referred_user_id=user.user_id,
+            referred_email=request.email
+        )
+        ref_doc = referral.model_dump()
+        ref_doc['created_at'] = ref_doc['created_at'].isoformat()
+        if ref_doc.get('qualified_at'):
+            ref_doc['qualified_at'] = ref_doc['qualified_at'].isoformat()
+        if ref_doc.get('paid_at'):
+            ref_doc['paid_at'] = ref_doc['paid_at'].isoformat()
+        await db.referrals.insert_one(ref_doc)
     
     # Create session
     session = UserSession(user_id=user.user_id)
