@@ -293,12 +293,31 @@ ${meeting.transcript || "No transcript available"}
 
         {/* Right Panel - Summary & Details */}
         <div className="space-y-6">
+          {/* Executive Summary */}
+          <Card data-testid="executive-summary-card" className="border-primary/30 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="font-['Manrope'] flex items-center gap-2 text-primary">
+                <Briefcase className="w-5 h-5" />
+                Executive Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {meeting.executive_summary ? (
+                <p className="text-slate-800 font-medium leading-relaxed" data-testid="executive-summary-content">
+                  {meeting.executive_summary}
+                </p>
+              ) : (
+                <p className="text-slate-500 italic">Executive summary will be generated with the full summary</p>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Summary */}
           <Card data-testid="summary-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="font-['Manrope'] flex items-center gap-2">
                 <Lightbulb className="w-5 h-5" />
-                Summary
+                Full Summary
               </CardTitle>
               {meeting.transcript && (
                 <Button
