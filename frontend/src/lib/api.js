@@ -119,6 +119,11 @@ export const meetingsApi = {
     return response.data;
   },
 
+  getAudioUrl: (meetingId) => {
+    // Returns the URL for streaming audio from GridFS
+    return `${API}/meetings/${meetingId}/audio`;
+  },
+
   transcribe: async (meetingId) => {
     const response = await api.post(`/meetings/${meetingId}/transcribe`);
     return response.data;
