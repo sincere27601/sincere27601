@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import api from "@/lib/api";
 
 const AudioWaveform = ({ audioUrl, filename }) => {
   const canvasRef = useRef(null);
@@ -14,18 +15,29 @@ const AudioWaveform = ({ audioUrl, filename }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [audioBlobUrl, setAudioBlobUrl] = useState(null);
 
-  // Generate waveform data from audio
+  // Fetch audio and generate waveform data
   const generateWaveform = useCallback(async () => {
     if (!audioUrl) return;
     
     setIsLoading(true);
     try {
-      const response = await fetch(audioUrl, { credentials: 'include' });
-      const arrayBuffer = await response.arrayBuffer();
+      // Use axios to fetch with credentials
+      const response = await api.get(audioUrl.replace(api.defaults.baseURL, ''), {
+        responseType: 'arraybuffer'
+      });
       
+      const arrayBuffer = response.data;
+      
+      // Create blob URL for audio playback
+      const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+      const blobUrl = URL.createObjectURL(blob);
+      setAudioBlobUrl(blobUrl);
+      
+      // Decode for waveform visualization
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
       
       // Get audio data from the first channel
       const channelData = audioBuffer.getChannelData(0);
@@ -46,6 +58,7 @@ const AudioWaveform = ({ audioUrl, filename }) => {
       const normalized = waveform.map(val => val / max);
       
       setWaveformData(normalized);
+      setDuration(audioBuffer.duration);
       audioContext.close();
     } catch (error) {
       console.error("Error generating waveform:", error);
@@ -59,6 +72,13 @@ const AudioWaveform = ({ audioUrl, filename }) => {
 
   useEffect(() => {
     generateWaveform();
+    
+    // Cleanup blob URL on unmount
+    return () => {
+      if (audioBlobUrl) {
+        URL.revokeObjectURL(audioBlobUrl);
+      }
+    };
   }, [generateWaveform]);
 
   // Draw waveform on canvas
