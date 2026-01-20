@@ -125,10 +125,41 @@ class TranscribeResponse(BaseModel):
 
 class SummaryResponse(BaseModel):
     summary: str
+    executive_summary: str
     action_items: List[str]
     key_decisions: List[str]
     topics: List[str]
     meeting_id: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    picture: Optional[str] = None
+
+
+class PasswordReset(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: f"reset_{uuid.uuid4().hex[:16]}")
+    user_id: str
+    token: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(hours=1))
+    used: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ============== AUTH HELPERS ==============
