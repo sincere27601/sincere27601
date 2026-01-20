@@ -1,22 +1,46 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Loader2, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Loader2, UserPlus, Gift } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { authApi, referralApi } from "@/lib/api";
 import { toast } from "sonner";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get("ref");
+  
+  const { setUser, setIsAuthenticated } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [referralCode, setReferralCode] = useState(refCode || "");
+  const [referrerName, setReferrerName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (refCode) {
+      validateReferralCode(refCode);
+    }
+  }, [refCode]);
+
+  const validateReferralCode = async (code) => {
+    try {
+      const result = await referralApi.validateCode(code);
+      if (result.valid) {
+        setReferrerName(result.referrer_name);
+      }
+    } catch (error) {
+      console.error("Invalid referral code:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +62,9 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register(email, password, name);
+      const userData = await authApi.register(email, password, name, referralCode || undefined);
+      setUser(userData);
+      setIsAuthenticated(true);
       toast.success("Account created successfully!");
       navigate("/app");
     } catch (error) {
@@ -50,7 +76,10 @@ const RegisterPage = () => {
   };
 
   const handleGoogleSignUp = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+    // Store referral code in sessionStorage for after OAuth
+    if (referralCode) {
+      sessionStorage.setItem("referral_code", referralCode);
+    }
     const redirectUrl = window.location.origin + '/app';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
@@ -67,6 +96,13 @@ const RegisterPage = () => {
           </Link>
           <CardTitle className="font-['Manrope']">Create an account</CardTitle>
           <CardDescription>Get started with Summary Boss today</CardDescription>
+          
+          {referrerName && (
+            <Badge variant="secondary" className="mt-2">
+              <Gift className="w-3 h-3 mr-1" />
+              Referred by {referrerName}
+            </Badge>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Google Sign Up */}
@@ -146,6 +182,19 @@ const RegisterPage = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={loading}
                 data-testid="confirm-password-input"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referralCode">Referral Code (optional)</Label>
+              <Input
+                id="referralCode"
+                type="text"
+                placeholder="Enter referral code"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                disabled={loading}
+                data-testid="referral-code-input"
               />
             </div>
 
