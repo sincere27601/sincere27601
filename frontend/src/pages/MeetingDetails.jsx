@@ -106,8 +106,12 @@ Title: ${meeting.title}
 Date: ${format(new Date(meeting.created_at), "MMMM d, yyyy 'at' h:mm a")}
 ${meeting.description ? `Description: ${meeting.description}` : ""}
 
-SUMMARY
--------
+EXECUTIVE SUMMARY (For Quick Review)
+------------------------------------
+${meeting.executive_summary || "No executive summary available"}
+
+FULL SUMMARY
+------------
 ${meeting.summary || "No summary available"}
 
 ACTION ITEMS
