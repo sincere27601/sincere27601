@@ -132,6 +132,12 @@ const LoginPage = () => {
           </form>
 
           <p className="text-center text-sm text-slate-500">
+            <Link to="/forgot-password" className="text-primary hover:underline font-medium" data-testid="forgot-password-link">
+              Forgot your password?
+            </Link>
+          </p>
+
+          <p className="text-center text-sm text-slate-500">
             Don't have an account?{" "}
             <Link to="/register" className="text-primary hover:underline font-medium" data-testid="register-link">
               Sign up
