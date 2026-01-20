@@ -88,8 +88,25 @@ class User(BaseModel):
     subscription_plan: Optional[str] = None  # "weekly", "yearly"
     subscription_expires_at: Optional[datetime] = None
     trial_expires_at: Optional[datetime] = None
-    referral_code_used: Optional[str] = None
+    promo_code_used: Optional[str] = None
+    referral_code: Optional[str] = None  # User's unique referral code
+    referred_by: Optional[str] = None  # user_id of referrer
+    referral_earnings: float = 0.0  # Total earnings from referrals
     stripe_customer_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Referral(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: f"ref_{uuid.uuid4().hex[:12]}")
+    referrer_user_id: str  # Who referred
+    referred_user_id: str  # Who was referred
+    referred_email: str
+    status: str = "pending"  # "pending", "qualified", "paid"
+    reward_amount: float = 50.0
+    qualified_at: Optional[datetime] = None  # When they subscribed to yearly
+    paid_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
