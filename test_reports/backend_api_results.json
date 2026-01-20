@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-01-20T22:13:51.755741",
-  "total_tests": 14,
-  "passed_tests": 14,
+  "timestamp": "2026-01-20T22:26:49.921299",
+  "total_tests": 22,
+  "passed_tests": 22,
   "success_rate": 100.0,
   "test_details": [
     {
@@ -17,11 +17,11 @@
       "success": true,
       "details": "",
       "response_data": {
-        "user_id": "user_79e98a38441a",
-        "email": "test_user_221350@example.com",
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
         "name": "Test User",
         "picture": "",
-        "session_token": "token_34172bdd84104ce7a460b3129e789ff7"
+        "session_token": "token_7efff40e97004a14b95ddd6a3523ec6e"
       }
     },
     {
@@ -29,12 +29,12 @@
       "success": true,
       "details": "",
       "response_data": {
-        "user_id": "user_79e98a38441a",
-        "email": "test_user_221350@example.com",
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
         "name": "Test User",
         "picture": "",
         "auth_provider": "email",
-        "created_at": "2026-01-20T22:13:50.818818+00:00"
+        "created_at": "2026-01-20T22:26:47.530162+00:00"
       }
     },
     {
@@ -56,12 +56,13 @@
       "success": true,
       "details": "",
       "response_data": {
-        "id": "2fda55d5-5c49-4a79-a504-4048e6223454",
-        "user_id": "user_79e98a38441a",
-        "title": "Test Meeting 221350",
+        "id": "afbb37ba-674f-4a31-b3bc-5ed199ae550f",
+        "user_id": "user_f28618d5b412",
+        "title": "Test Meeting 222647",
         "description": "This is a test meeting for auth validation",
         "transcript": "",
         "summary": "",
+        "executive_summary": "",
         "action_items": [],
         "key_decisions": [],
         "attendees": [
@@ -72,8 +73,83 @@
         "audio_filename": "",
         "audio_url": "",
         "status": "pending",
-        "created_at": "2026-01-20T22:13:50.986879Z",
-        "updated_at": "2026-01-20T22:13:50.986880Z"
+        "created_at": "2026-01-20T22:26:47.684893Z",
+        "updated_at": "2026-01-20T22:26:47.684895Z"
+      }
+    },
+    {
+      "test": "Create Meeting (Check Executive Summary Field)",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "id": "a2dcb9bb-42eb-44fd-bffb-ed73098af7a4",
+        "user_id": "user_f28618d5b412",
+        "title": "Executive Summary Test Meeting 222647",
+        "description": "Testing executive summary field",
+        "transcript": "",
+        "summary": "",
+        "executive_summary": "",
+        "action_items": [],
+        "key_decisions": [],
+        "attendees": [
+          "exec@example.com"
+        ],
+        "topics": [],
+        "duration_seconds": 0,
+        "audio_filename": "",
+        "audio_url": "",
+        "status": "pending",
+        "created_at": "2026-01-20T22:26:47.725492Z",
+        "updated_at": "2026-01-20T22:26:47.725494Z"
+      }
+    },
+    {
+      "test": "Delete Executive Summary Test Meeting",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Meeting deleted successfully"
+      }
+    },
+    {
+      "test": "Update User Profile",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
+        "name": "Updated Test User",
+        "picture": "https://example.com/avatar.jpg",
+        "auth_provider": "email",
+        "created_at": "2026-01-20T22:26:47.530162+00:00"
+      }
+    },
+    {
+      "test": "Change Password (Authenticated)",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Password changed successfully"
+      }
+    },
+    {
+      "test": "Login with New Password",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
+        "name": "Updated Test User",
+        "picture": "https://example.com/avatar.jpg",
+        "session_token": "token_4c8be422ccf640c6b1d9995f287be8c2"
+      }
+    },
+    {
+      "test": "Change Password (Invalid Current - Should be 400)",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "detail": "Current password is incorrect"
       }
     },
     {
@@ -93,15 +169,32 @@
       }
     },
     {
+      "test": "Forgot Password Request",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "If an account exists with this email, a reset link has been sent.",
+        "reset_token": "a28ab397081147c387e3a5f90d6136f8"
+      }
+    },
+    {
+      "test": "Reset Password with Token",
+      "success": true,
+      "details": "",
+      "response_data": {
+        "message": "Password reset successfully. You can now login with your new password."
+      }
+    },
+    {
       "test": "User Login",
       "success": true,
       "details": "",
       "response_data": {
-        "user_id": "user_79e98a38441a",
-        "email": "test_user_221350@example.com",
-        "name": "Test User",
-        "picture": "",
-        "session_token": "token_e155e31d5ed447c8904dbd28b776b611"
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
+        "name": "Updated Test User",
+        "picture": "https://example.com/avatar.jpg",
+        "session_token": "token_23f2efd4310d4c6eac24642f3f45f2f9"
       }
     },
     {
@@ -109,12 +202,12 @@
       "success": true,
       "details": "",
       "response_data": {
-        "user_id": "user_79e98a38441a",
-        "email": "test_user_221350@example.com",
-        "name": "Test User",
-        "picture": "",
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
+        "name": "Updated Test User",
+        "picture": "https://example.com/avatar.jpg",
         "auth_provider": "email",
-        "created_at": "2026-01-20T22:13:50.818818+00:00"
+        "created_at": "2026-01-20T22:26:47.530162+00:00"
       }
     },
     {
@@ -138,11 +231,11 @@
       "success": true,
       "details": "",
       "response_data": {
-        "user_id": "user_79e98a38441a",
-        "email": "test_user_221350@example.com",
-        "name": "Test User",
-        "picture": "",
-        "session_token": "token_2f3c5bdf8c54417d97181671690553f6"
+        "user_id": "user_f28618d5b412",
+        "email": "test_user_222647@example.com",
+        "name": "Updated Test User",
+        "picture": "https://example.com/avatar.jpg",
+        "session_token": "token_1cd2cffd980d45d591b5c3defb79ab56"
       }
     },
     {
