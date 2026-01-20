@@ -105,217 +105,240 @@ class SummaryBossAuthTester:
             200
         )
 
-    def test_stats_endpoint(self):
-        """Test stats endpoint"""
-        return self.run_test(
-            "Stats Endpoint",
-            "GET", 
-            "api/stats",
-            200
+    def test_register_user(self):
+        """Test user registration with email/password"""
+        register_data = {
+            "email": self.test_user_email,
+            "password": self.test_user_password,
+            "name": self.test_user_name
+        }
+        
+        success, response = self.run_test(
+            "User Registration",
+            "POST",
+            "api/auth/register",
+            200,
+            data=register_data
         )
+        
+        if success and response:
+            # Store session token for future tests
+            self.session_token = response.get('session_token')
+            if self.session_token:
+                print(f"   ✅ Session token received: {self.session_token[:20]}...")
+            
+            # Validate response structure
+            required_fields = ['user_id', 'email', 'name', 'session_token']
+            for field in required_fields:
+                if field not in response:
+                    print(f"   ❌ Missing field in response: {field}")
+                    return False
+                    
+            if response.get('email') == self.test_user_email:
+                print(f"   ✅ Email matches: {response.get('email')}")
+            else:
+                print(f"   ❌ Email mismatch: expected {self.test_user_email}, got {response.get('email')}")
+                
+        return success
 
-    def test_create_meeting(self):
-        """Test creating a meeting"""
+    def test_login_user(self):
+        """Test user login with email/password"""
+        login_data = {
+            "email": self.test_user_email,
+            "password": self.test_user_password
+        }
+        
+        success, response = self.run_test(
+            "User Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success and response:
+            # Update session token
+            new_token = response.get('session_token')
+            if new_token:
+                self.session_token = new_token
+                print(f"   ✅ New session token received: {new_token[:20]}...")
+            
+            # Validate response structure
+            required_fields = ['user_id', 'email', 'name', 'session_token']
+            for field in required_fields:
+                if field not in response:
+                    print(f"   ❌ Missing field in response: {field}")
+                    return False
+                    
+        return success
+
+    def test_get_current_user(self):
+        """Test getting current authenticated user"""
+        if not self.session_token:
+            self.log_test("Get Current User", False, "No session token available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Current User (/api/auth/me)",
+            "GET",
+            "api/auth/me",
+            200,
+            use_auth=True
+        )
+        
+        if success and response:
+            # Validate user data
+            if response.get('email') == self.test_user_email:
+                print(f"   ✅ User email matches: {response.get('email')}")
+            else:
+                print(f"   ❌ User email mismatch")
+                
+            if 'user_id' in response and 'name' in response:
+                print(f"   ✅ User data complete: {response.get('name')}")
+            else:
+                print(f"   ❌ Missing user data fields")
+                
+        return success
+
+    def test_meetings_requires_auth(self):
+        """Test that meetings endpoint requires authentication"""
+        # First test without authentication - should return 401
+        success_unauth, _ = self.run_test(
+            "Meetings Endpoint (Unauthenticated)",
+            "GET",
+            "api/meetings",
+            401,
+            use_auth=False
+        )
+        
+        if not success_unauth:
+            print(f"   ❌ Expected 401 for unauthenticated request")
+            return False
+            
+        # Then test with authentication - should return 200
+        if not self.session_token:
+            print(f"   ❌ No session token for authenticated test")
+            return False
+            
+        success_auth, response = self.run_test(
+            "Meetings Endpoint (Authenticated)",
+            "GET",
+            "api/meetings",
+            200,
+            use_auth=True
+        )
+        
+        if success_auth:
+            print(f"   ✅ Authenticated request successful")
+            if isinstance(response, list):
+                print(f"   ✅ Response is list of meetings: {len(response)} meetings")
+            else:
+                print(f"   ❌ Response is not a list")
+                return False
+        
+        return success_unauth and success_auth
+
+    def test_create_meeting_authenticated(self):
+        """Test creating a meeting with authentication"""
+        if not self.session_token:
+            self.log_test("Create Meeting (Authenticated)", False, "No session token available")
+            return False
+            
         meeting_data = {
             "title": f"Test Meeting {datetime.now().strftime('%H%M%S')}",
-            "description": "This is a test meeting for API validation",
-            "attendees": ["test@example.com", "user@example.com"]
+            "description": "This is a test meeting for auth validation",
+            "attendees": ["test@example.com"]
         }
         
         success, response = self.run_test(
-            "Create Meeting",
+            "Create Meeting (Authenticated)",
             "POST",
             "api/meetings",
             200,
-            data=meeting_data
+            data=meeting_data,
+            use_auth=True
         )
         
         if success and response:
-            return response.get('id')
-        return None
-
-    def test_get_meetings(self):
-        """Test getting meetings list"""
-        return self.run_test(
-            "Get Meetings List",
-            "GET",
-            "api/meetings",
-            200
-        )
-
-    def test_get_meeting_by_id(self, meeting_id):
-        """Test getting a specific meeting"""
-        if not meeting_id:
-            self.log_test("Get Meeting by ID", False, "No meeting ID provided")
-            return False
-            
-        return self.run_test(
-            "Get Meeting by ID",
-            "GET",
-            f"api/meetings/{meeting_id}",
-            200
-        )
-
-    def test_update_meeting(self, meeting_id):
-        """Test updating a meeting"""
-        if not meeting_id:
-            self.log_test("Update Meeting", False, "No meeting ID provided")
-            return False
-            
-        update_data = {
-            "title": f"Updated Test Meeting {datetime.now().strftime('%H%M%S')}",
-            "description": "Updated description for test meeting"
-        }
-        
-        return self.run_test(
-            "Update Meeting",
-            "PUT",
-            f"api/meetings/{meeting_id}",
-            200,
-            data=update_data
-        )
-
-    def test_upload_audio(self, meeting_id):
-        """Test uploading audio file to meeting"""
-        if not meeting_id:
-            self.log_test("Upload Audio", False, "No meeting ID provided")
-            return False
-            
-        # Create a small test audio file (mock)
-        test_audio_content = b"fake audio content for testing"
-        
-        files = {
-            'file': ('test_audio.wav', test_audio_content, 'audio/wav')
-        }
-        
-        return self.run_test(
-            "Upload Audio File",
-            "POST",
-            f"api/meetings/{meeting_id}/upload",
-            200,
-            files=files
-        )
-
-    def test_process_meeting_endpoint(self):
-        """Test the process meeting endpoint (upload + transcribe + summarize)"""
-        # Create a small test audio file
-        test_audio_content = b"fake audio content for testing"
-        
-        files = {
-            'file': ('test_meeting.wav', test_audio_content, 'audio/wav')
-        }
-        
-        data = {
-            'title': f'Processed Test Meeting {datetime.now().strftime("%H%M%S")}',
-            'description': 'Test meeting processed via API'
-        }
-        
-        success, response = self.run_test(
-            "Process Meeting (Upload + Transcribe + Summarize)",
-            "POST",
-            "api/meetings/process",
-            200,
-            data=data,
-            files=files
-        )
-        
-        if success and response:
-            return response.get('id')
-        return None
-
-    def test_delete_meeting(self, meeting_id):
-        """Test deleting a meeting"""
-        if not meeting_id:
-            self.log_test("Delete Meeting", False, "No meeting ID provided")
-            return False
-            
-        return self.run_test(
-            "Delete Meeting",
-            "DELETE",
-            f"api/meetings/{meeting_id}",
-            200
-        )
-
-    def test_subscription_plans(self):
-        """Test getting subscription plans"""
-        success, response = self.run_test(
-            "Get Subscription Plans",
-            "GET",
-            "api/subscription/plans",
-            200
-        )
-        
-        if success and response:
-            plans = response.get('plans', [])
-            if len(plans) >= 2:
-                # Check for monthly and yearly plans
-                monthly_plan = next((p for p in plans if p.get('id') == 'monthly'), None)
-                yearly_plan = next((p for p in plans if p.get('id') == 'yearly'), None)
-                
-                if monthly_plan and yearly_plan:
-                    # Validate monthly plan
-                    if monthly_plan.get('price') == 9.99 and monthly_plan.get('interval') == 'month':
-                        print(f"   ✅ Monthly plan: ${monthly_plan.get('price')}/month")
-                    else:
-                        print(f"   ❌ Monthly plan price/interval incorrect")
-                        
-                    # Validate yearly plan  
-                    if yearly_plan.get('price') == 79.99 and yearly_plan.get('interval') == 'year':
-                        print(f"   ✅ Yearly plan: ${yearly_plan.get('price')}/year")
-                    else:
-                        print(f"   ❌ Yearly plan price/interval incorrect")
-                else:
-                    print(f"   ❌ Missing monthly or yearly plan")
+            meeting_id = response.get('id')
+            if meeting_id:
+                print(f"   ✅ Meeting created with ID: {meeting_id}")
+                return meeting_id
             else:
-                print(f"   ❌ Expected at least 2 plans, got {len(plans)}")
+                print(f"   ❌ No meeting ID in response")
+        
+        return None if not success else response.get('id')
+
+    def test_logout_user(self):
+        """Test user logout"""
+        if not self.session_token:
+            self.log_test("User Logout", False, "No session token available")
+            return False
+            
+        success, response = self.run_test(
+            "User Logout",
+            "POST",
+            "api/auth/logout",
+            200,
+            use_auth=True
+        )
+        
+        if success:
+            # Clear session token
+            self.session_token = None
+            print(f"   ✅ Session token cleared")
+            
+            # Verify logout by trying to access protected endpoint
+            success_verify, _ = self.run_test(
+                "Verify Logout (Should be 401)",
+                "GET",
+                "api/auth/me",
+                401,
+                use_auth=False
+            )
+            
+            if success_verify:
+                print(f"   ✅ Logout verified - protected endpoint returns 401")
+            else:
+                print(f"   ❌ Logout verification failed")
+                return False
         
         return success
 
-    def test_subscription_checkout(self):
-        """Test creating subscription checkout session"""
-        checkout_data = {
-            "plan_id": "monthly",
-            "origin_url": "https://briefnote.preview.emergentagent.com"
+    def test_invalid_login(self):
+        """Test login with invalid credentials"""
+        invalid_login_data = {
+            "email": "nonexistent@example.com",
+            "password": "wrongpassword"
         }
         
         success, response = self.run_test(
-            "Create Subscription Checkout",
+            "Invalid Login (Should be 401)",
             "POST",
-            "api/subscription/checkout",
-            200,
-            data=checkout_data
+            "api/auth/login",
+            401,
+            data=invalid_login_data
         )
         
-        if success and response:
-            if 'checkout_url' in response and 'session_id' in response:
-                print(f"   ✅ Checkout URL generated: {response.get('checkout_url')[:50]}...")
-                return response.get('session_id')
-            else:
-                print(f"   ❌ Missing checkout_url or session_id in response")
+        return success
+
+    def test_duplicate_registration(self):
+        """Test registering with existing email"""
+        duplicate_data = {
+            "email": self.test_user_email,  # Same email as before
+            "password": "AnotherPass123!",
+            "name": "Another User"
+        }
         
-        return None
-
-    def test_subscription_status(self, session_id):
-        """Test getting subscription status"""
-        if not session_id:
-            self.log_test("Get Subscription Status", False, "No session ID provided")
-            return False
-            
-        return self.run_test(
-            "Get Subscription Status",
-            "GET",
-            f"api/subscription/status/{session_id}",
-            200
+        success, response = self.run_test(
+            "Duplicate Registration (Should be 400)",
+            "POST",
+            "api/auth/register",
+            400,
+            data=duplicate_data
         )
-
-    def test_subscription_transactions(self):
-        """Test getting payment transactions"""
-        return self.run_test(
-            "Get Payment Transactions",
-            "GET",
-            "api/subscription/transactions",
-            200
-        )
+        
+        return success
 
     def run_all_tests(self):
         """Run comprehensive API tests"""
