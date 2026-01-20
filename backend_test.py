@@ -550,8 +550,8 @@ class SummaryBossAuthTester:
         return False
 
     def run_all_tests(self):
-        """Run comprehensive authentication API tests"""
-        print("🚀 Starting Summary Boss Authentication API Tests")
+        """Run comprehensive authentication API tests including new password reset and profile features"""
+        print("🚀 Starting Summary Boss Authentication API Tests (Including Password Reset & Profile)")
         print(f"📍 Base URL: {self.base_url}")
         print(f"👤 Test User: {self.test_user_email}")
         print("=" * 60)
@@ -571,25 +571,41 @@ class SummaryBossAuthTester:
         # 3. Test protected endpoints require auth
         self.test_meetings_requires_auth()
         
-        # 4. Test creating meeting with auth
+        # 4. Test creating meeting with auth and executive summary field
         meeting_id = self.test_create_meeting_authenticated()
+        self.test_meeting_executive_summary()
         
-        # 5. Test logout
+        # 5. Test profile management
+        print("\n👤 Testing Profile Management:")
+        self.test_update_profile()
+        
+        # 6. Test password management
+        print("\n🔒 Testing Password Management:")
+        self.test_change_password()
+        self.test_change_password_invalid_current()
+        
+        # 7. Test logout
         self.test_logout_user()
         
-        # 6. Test login after logout
+        # 8. Test password reset flow
+        print("\n🔄 Testing Password Reset Flow:")
+        reset_token = self.test_forgot_password()
+        if reset_token and reset_token != True:  # Only if we got actual token
+            self.test_reset_password(reset_token)
+        
+        # 9. Test login after password reset (if reset was performed)
         self.test_login_user()
         
-        # 7. Test getting current user after login
+        # 10. Test getting current user after login
         self.test_get_current_user()
         
         # Test error cases
         print("\n❌ Testing Error Cases:")
         
-        # 8. Test invalid login
+        # 11. Test invalid login
         self.test_invalid_login()
         
-        # 9. Test duplicate registration
+        # 12. Test duplicate registration
         self.test_duplicate_registration()
         
         # Clean up - delete test meeting if created
@@ -619,7 +635,7 @@ class SummaryBossAuthTester:
         
         # Print summary
         print("\n" + "=" * 60)
-        print(f"📊 Authentication Test Summary:")
+        print(f"📊 Enhanced Authentication Test Summary:")
         print(f"   Total Tests: {self.tests_run}")
         print(f"   Passed: {self.tests_passed}")
         print(f"   Failed: {self.tests_run - self.tests_passed}")
