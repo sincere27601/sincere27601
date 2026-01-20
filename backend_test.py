@@ -341,42 +341,76 @@ class SummaryBossAuthTester:
         return success
 
     def run_all_tests(self):
-        """Run comprehensive API tests"""
-        print("🚀 Starting Summary AI Backend API Tests")
+        """Run comprehensive authentication API tests"""
+        print("🚀 Starting Summary Boss Authentication API Tests")
         print(f"📍 Base URL: {self.base_url}")
+        print(f"👤 Test User: {self.test_user_email}")
         print("=" * 60)
         
-        # Test basic endpoints
+        # Test basic endpoint
         self.test_root_endpoint()
-        self.test_stats_endpoint()
         
-        # Test subscription endpoints
-        self.test_subscription_plans()
-        session_id = self.test_subscription_checkout()
-        if session_id:
-            self.test_subscription_status(session_id)
-        self.test_subscription_transactions()
+        # Test authentication flow
+        print("\n🔐 Testing Authentication Flow:")
         
-        # Test meeting CRUD operations
-        meeting_id = self.test_create_meeting()
-        self.test_get_meetings()
+        # 1. Register new user
+        self.test_register_user()
         
+        # 2. Test getting current user (should work with registration token)
+        self.test_get_current_user()
+        
+        # 3. Test protected endpoints require auth
+        self.test_meetings_requires_auth()
+        
+        # 4. Test creating meeting with auth
+        meeting_id = self.test_create_meeting_authenticated()
+        
+        # 5. Test logout
+        self.test_logout_user()
+        
+        # 6. Test login after logout
+        self.test_login_user()
+        
+        # 7. Test getting current user after login
+        self.test_get_current_user()
+        
+        # Test error cases
+        print("\n❌ Testing Error Cases:")
+        
+        # 8. Test invalid login
+        self.test_invalid_login()
+        
+        # 9. Test duplicate registration
+        self.test_duplicate_registration()
+        
+        # Clean up - delete test meeting if created
         if meeting_id:
-            self.test_get_meeting_by_id(meeting_id)
-            self.test_update_meeting(meeting_id)
-            self.test_upload_audio(meeting_id)
-            # Clean up - delete the test meeting
-            self.test_delete_meeting(meeting_id)
-        
-        # Test process meeting endpoint
-        processed_meeting_id = self.test_process_meeting_endpoint()
-        if processed_meeting_id:
-            # Clean up processed meeting
-            self.test_delete_meeting(processed_meeting_id)
+            # Re-login to get token for cleanup
+            login_data = {
+                "email": self.test_user_email,
+                "password": self.test_user_password
+            }
+            success, response = self.run_test(
+                "Re-login for Cleanup",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            if success and response:
+                self.session_token = response.get('session_token')
+                # Delete the test meeting
+                self.run_test(
+                    "Delete Test Meeting (Cleanup)",
+                    "DELETE",
+                    f"api/meetings/{meeting_id}",
+                    200,
+                    use_auth=True
+                )
         
         # Print summary
         print("\n" + "=" * 60)
-        print(f"📊 Test Summary:")
+        print(f"📊 Authentication Test Summary:")
         print(f"   Total Tests: {self.tests_run}")
         print(f"   Passed: {self.tests_passed}")
         print(f"   Failed: {self.tests_run - self.tests_passed}")
