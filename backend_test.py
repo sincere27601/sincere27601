@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Summary AI App
-Tests all API endpoints for meeting management, transcription, and summarization
+Backend API Testing for Summary Boss App - Authentication Focus
+Tests authentication endpoints and protected routes
 """
 
 import requests
@@ -11,12 +11,16 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-class SummaryAITester:
+class SummaryBossAuthTester:
     def __init__(self, base_url="https://briefnote.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
         self.test_results = []
+        self.session_token = None
+        self.test_user_email = f"test_user_{datetime.now().strftime('%H%M%S')}@example.com"
+        self.test_user_password = "TestPass123!"
+        self.test_user_name = "Test User"
 
     def log_test(self, name, success, details="", response_data=None):
         """Log test result"""
