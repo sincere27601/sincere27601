@@ -254,6 +254,44 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
+def generate_referral_code(user_id: str) -> str:
+    """Generate a unique referral code for a user"""
+    return f"REF{user_id[-6:].upper()}{uuid.uuid4().hex[:4].upper()}"
+
+
+async def check_user_subscription(user_doc: dict) -> dict:
+    """Check and update user subscription status"""
+    status = user_doc.get("subscription_status", "none")
+    
+    # Lifetime access never expires
+    if status == "lifetime":
+        return {"has_access": True, "status": "lifetime", "message": "Lifetime access"}
+    
+    # Check trial
+    if status == "trial":
+        trial_expires = user_doc.get("trial_expires_at")
+        if trial_expires:
+            if isinstance(trial_expires, str):
+                trial_expires = datetime.fromisoformat(trial_expires.replace('Z', '+00:00'))
+            if trial_expires.tzinfo is None:
+                trial_expires = trial_expires.replace(tzinfo=timezone.utc)
+            if trial_expires > datetime.now(timezone.utc):
+                return {"has_access": True, "status": "trial", "expires_at": trial_expires.isoformat()}
+    
+    # Check active subscription
+    if status == "active":
+        sub_expires = user_doc.get("subscription_expires_at")
+        if sub_expires:
+            if isinstance(sub_expires, str):
+                sub_expires = datetime.fromisoformat(sub_expires.replace('Z', '+00:00'))
+            if sub_expires.tzinfo is None:
+                sub_expires = sub_expires.replace(tzinfo=timezone.utc)
+            if sub_expires > datetime.now(timezone.utc):
+                return {"has_access": True, "status": "active", "plan": user_doc.get("subscription_plan"), "expires_at": sub_expires.isoformat()}
+    
+    return {"has_access": False, "status": "none", "message": "No active subscription"}
+
+
 async def get_current_user(request: Request) -> Optional[dict]:
     """Get current user from session token (cookie or header)"""
     # Try cookie first
