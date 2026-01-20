@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   User,
-  Settings
+  Settings,
+  CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Record Meeting", href: "/app/record", icon: Mic },
   { name: "Upload Audio", href: "/app/upload", icon: Upload },
   { name: "Meeting History", href: "/app/history", icon: History },
+  { name: "Subscription", href: "/app/subscription", icon: CreditCard },
   { name: "Profile", href: "/app/profile", icon: Settings },
 ];
 
