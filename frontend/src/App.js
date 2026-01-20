@@ -8,12 +8,15 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import RecordMeeting from "@/pages/RecordMeeting";
 import UploadMeeting from "@/pages/UploadMeeting";
 import MeetingDetails from "@/pages/MeetingDetails";
 import MeetingHistory from "@/pages/MeetingHistory";
+import ProfilePage from "@/pages/ProfilePage";
 
 // Layout
 import AppLayout from "@/components/layout/AppLayout";
@@ -33,6 +36,8 @@ const AppRouter = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/app" element={
         <ProtectedRoute>
           <AppLayout />
@@ -43,6 +48,7 @@ const AppRouter = () => {
         <Route path="upload" element={<UploadMeeting />} />
         <Route path="meeting/:id" element={<MeetingDetails />} />
         <Route path="history" element={<MeetingHistory />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   );
