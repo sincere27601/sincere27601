@@ -1053,6 +1053,7 @@ async def delete_meeting(meeting_id: str, user: dict = Depends(require_auth)):
 
 @api_router.post("/meetings/{meeting_id}/upload")
 async def upload_audio(meeting_id: str, file: UploadFile = File(...), user: dict = Depends(require_auth)):
+    """Upload audio file to GridFS cloud storage"""
     meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
@@ -1061,34 +1062,88 @@ async def upload_audio(meeting_id: str, file: UploadFile = File(...), user: dict
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail=f"File type not supported. Allowed: {allowed_types}")
     
-    # Save file locally (in production, this would go to cloud storage)
+    # Store file in MongoDB GridFS
     filename = f"{user['user_id']}_{meeting_id}_{file.filename}"
-    filepath = UPLOADS_DIR / filename
+    content = await file.read()
     
-    async with aiofiles.open(filepath, 'wb') as f:
-        content = await file.read()
-        await f.write(content)
+    # Delete old file if exists
+    if meeting.get('audio_file_id'):
+        try:
+            await fs_bucket.delete(ObjectId(meeting['audio_file_id']))
+        except Exception:
+            pass  # Old file may not exist
+    
+    # Upload to GridFS
+    file_id = await fs_bucket.upload_from_stream(
+        filename,
+        content,
+        metadata={
+            "user_id": user["user_id"],
+            "meeting_id": meeting_id,
+            "content_type": file.content_type,
+            "original_filename": file.filename
+        }
+    )
     
     await db.meetings.update_one(
         {"id": meeting_id},
-        {"$set": {"audio_filename": filename, "status": "uploaded", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "audio_filename": filename,
+            "audio_file_id": str(file_id),
+            "status": "uploaded",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
     )
     
-    return {"message": "Audio uploaded successfully", "filename": filename}
+    return {"message": "Audio uploaded successfully", "filename": filename, "file_id": str(file_id)}
 
 
-@api_router.post("/meetings/{meeting_id}/transcribe", response_model=TranscribeResponse)
-async def transcribe_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+@api_router.get("/meetings/{meeting_id}/audio")
+async def get_audio(meeting_id: str, user: dict = Depends(require_auth)):
+    """Stream audio file from GridFS"""
     meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
-    if not meeting.get('audio_filename'):
-        raise HTTPException(status_code=400, detail="No audio file uploaded for this meeting")
+    if not meeting.get('audio_file_id'):
+        raise HTTPException(status_code=404, detail="No audio file found for this meeting")
     
-    filepath = UPLOADS_DIR / meeting['audio_filename']
-    if not filepath.exists():
-        raise HTTPException(status_code=400, detail="Audio file not found")
+    try:
+        file_id = ObjectId(meeting['audio_file_id'])
+        
+        # Get file info
+        grid_out = await fs_bucket.open_download_stream(file_id)
+        
+        async def file_stream():
+            while True:
+                chunk = await grid_out.read(1024 * 1024)  # 1MB chunks
+                if not chunk:
+                    break
+                yield chunk
+        
+        content_type = grid_out.metadata.get('content_type', 'audio/mpeg') if grid_out.metadata else 'audio/mpeg'
+        
+        return StreamingResponse(
+            file_stream(),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"inline; filename={meeting.get('audio_filename', 'audio')}"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error streaming audio: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve audio file")
+
+
+@api_router.post("/meetings/{meeting_id}/transcribe", response_model=TranscribeResponse)
+async def transcribe_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+    """Transcribe audio from GridFS storage"""
+    meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    if not meeting.get('audio_file_id'):
+        raise HTTPException(status_code=400, detail="No audio file uploaded for this meeting")
     
     await db.meetings.update_one(
         {"id": meeting_id},
@@ -1096,25 +1151,43 @@ async def transcribe_meeting(meeting_id: str, user: dict = Depends(require_auth)
     )
     
     try:
-        api_key = os.environ.get('EMERGENT_LLM_KEY')
-        stt = OpenAISpeechToText(api_key=api_key)
+        # Download from GridFS to temp file for transcription
+        file_id = ObjectId(meeting['audio_file_id'])
+        grid_out = await fs_bucket.open_download_stream(file_id)
         
-        with open(filepath, "rb") as audio_file:
-            response = await stt.transcribe(
-                file=audio_file,
-                model="whisper-1",
-                response_format="json",
-                language="en"
+        # Get file extension from filename
+        filename = meeting.get('audio_filename', 'audio.wav')
+        ext = Path(filename).suffix or '.wav'
+        
+        # Write to temp file
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp_file:
+            content = await grid_out.read()
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+        
+        try:
+            api_key = os.environ.get('EMERGENT_LLM_KEY')
+            stt = OpenAISpeechToText(api_key=api_key)
+            
+            with open(tmp_path, "rb") as audio_file:
+                response = await stt.transcribe(
+                    file=audio_file,
+                    model="whisper-1",
+                    response_format="json",
+                    language="en"
+                )
+            
+            transcript = response.text
+            
+            await db.meetings.update_one(
+                {"id": meeting_id},
+                {"$set": {"transcript": transcript, "status": "transcribed", "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
-        
-        transcript = response.text
-        
-        await db.meetings.update_one(
-            {"id": meeting_id},
-            {"$set": {"transcript": transcript, "status": "transcribed", "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        
-        return TranscribeResponse(transcript=transcript, meeting_id=meeting_id)
+            
+            return TranscribeResponse(transcript=transcript, meeting_id=meeting_id)
+        finally:
+            # Clean up temp file
+            os.unlink(tmp_path)
         
     except Exception as e:
         logger.error(f"Transcription error: {str(e)}")
