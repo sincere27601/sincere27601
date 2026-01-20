@@ -213,6 +213,37 @@ class PasswordReset(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class PromoCodeRequest(BaseModel):
+    code: str
+
+
+class SubscriptionCheckoutRequest(BaseModel):
+    plan_id: str
+    origin_url: str
+
+
+class ReferralSignupRequest(BaseModel):
+    referral_code: str
+
+
+class PaymentTransaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    session_id: str
+    plan_id: str
+    plan_name: str
+    amount: float
+    currency: str = "usd"
+    is_trial: bool = False
+    payment_status: str = "pending"
+    status: str = "initiated"
+    metadata: Optional[Dict[str, str]] = {}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 # ============== AUTH HELPERS ==============
 
 def hash_password(password: str) -> str:
