@@ -156,4 +156,51 @@ export const statsApi = {
   },
 };
 
+// Subscription API
+export const subscriptionApi = {
+  getPlans: async () => {
+    const response = await api.get("/subscription/plans");
+    return response.data;
+  },
+
+  getStatus: async () => {
+    const response = await api.get("/subscription/status");
+    return response.data;
+  },
+
+  createCheckout: async (planId, originUrl) => {
+    const response = await api.post("/subscription/checkout", {
+      plan_id: planId,
+      origin_url: originUrl,
+    });
+    return response.data;
+  },
+
+  getPaymentStatus: async (sessionId) => {
+    const response = await api.get(`/subscription/status/${sessionId}`);
+    return response.data;
+  },
+};
+
+// Promo Code API
+export const promoApi = {
+  apply: async (code) => {
+    const response = await api.post("/promo/apply", { code });
+    return response.data;
+  },
+};
+
+// Referral API
+export const referralApi = {
+  getReferrals: async () => {
+    const response = await api.get("/referrals");
+    return response.data;
+  },
+
+  validateCode: async (code) => {
+    const response = await api.get(`/referrals/validate/${code}`);
+    return response.data;
+  },
+};
+
 export default api;
