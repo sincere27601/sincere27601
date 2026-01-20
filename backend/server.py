@@ -93,6 +93,7 @@ class Meeting(BaseModel):
     description: Optional[str] = ""
     transcript: Optional[str] = ""
     summary: Optional[str] = ""
+    executive_summary: Optional[str] = ""  # Short executive-level overview
     action_items: Optional[List[str]] = []
     key_decisions: Optional[List[str]] = []
     attendees: Optional[List[str]] = []
