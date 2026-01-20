@@ -155,6 +155,21 @@ ${meeting.transcript || "No transcript available"}
     toast.success("Summary downloaded");
   };
 
+  const toggleAudioPlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       completed: { label: "Completed", className: "bg-emerald-100 text-emerald-700" },
