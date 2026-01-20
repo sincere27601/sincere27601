@@ -162,7 +162,7 @@ const AudioWaveform = ({ audioUrl, filename }) => {
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef.current) {
+    if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
       setDuration(audioRef.current.duration);
     }
   };
