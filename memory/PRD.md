@@ -151,6 +151,8 @@ Build a "Summary AI" app that records meetings and summarizes them for business 
 - `password_resets` - Password reset tokens
 - `referrals` - Referral tracking
 - `payment_transactions` - Payment history
+- `audio_files.files` - GridFS file metadata
+- `audio_files.chunks` - GridFS file data chunks
 
 ## Notes for Deployment
 1. Stripe is using test keys - need production keys for live payments
