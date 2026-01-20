@@ -155,6 +155,8 @@ export const Header = ({ onMenuClick }) => {
         return "Meeting History";
       case "/app/profile":
         return "Profile Settings";
+      case "/app/subscription":
+        return "Subscription";
       default:
         if (location.pathname.startsWith("/app/meeting/")) {
           return "Meeting Details";
