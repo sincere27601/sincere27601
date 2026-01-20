@@ -1302,6 +1302,7 @@ async def process_meeting(
     file: UploadFile = File(...),
     user: dict = Depends(require_auth)
 ):
+    """Upload, transcribe, and summarize a meeting in one step using GridFS storage"""
     meeting = Meeting(
         user_id=user["user_id"],
         title=title,
@@ -1316,36 +1317,59 @@ async def process_meeting(
     await db.meetings.insert_one(doc)
     meeting_id = meeting.id
     
+    # Store file in GridFS
     filename = f"{user['user_id']}_{meeting_id}_{file.filename}"
-    filepath = UPLOADS_DIR / filename
+    content = await file.read()
     
-    async with aiofiles.open(filepath, 'wb') as f:
-        content = await file.read()
-        await f.write(content)
+    file_id = await fs_bucket.upload_from_stream(
+        filename,
+        content,
+        metadata={
+            "user_id": user["user_id"],
+            "meeting_id": meeting_id,
+            "content_type": file.content_type,
+            "original_filename": file.filename
+        }
+    )
     
     await db.meetings.update_one(
         {"id": meeting_id},
-        {"$set": {"audio_filename": filename}}
+        {"$set": {
+            "audio_filename": filename,
+            "audio_file_id": str(file_id)
+        }}
     )
     
     try:
-        api_key = os.environ.get('EMERGENT_LLM_KEY')
-        stt = OpenAISpeechToText(api_key=api_key)
+        # Get file extension
+        ext = Path(filename).suffix or '.wav'
         
-        with open(filepath, "rb") as audio_file:
-            response = await stt.transcribe(
-                file=audio_file,
-                model="whisper-1",
-                response_format="json",
-                language="en"
+        # Write to temp file for transcription
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp_file:
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+        
+        try:
+            api_key = os.environ.get('EMERGENT_LLM_KEY')
+            stt = OpenAISpeechToText(api_key=api_key)
+            
+            with open(tmp_path, "rb") as audio_file:
+                response = await stt.transcribe(
+                    file=audio_file,
+                    model="whisper-1",
+                    response_format="json",
+                    language="en"
+                )
+            
+            transcript = response.text
+            
+            await db.meetings.update_one(
+                {"id": meeting_id},
+                {"$set": {"transcript": transcript, "status": "transcribed"}}
             )
-        
-        transcript = response.text
-        
-        await db.meetings.update_one(
-            {"id": meeting_id},
-            {"$set": {"transcript": transcript, "status": "transcribed"}}
-        )
+        finally:
+            # Clean up temp file
+            os.unlink(tmp_path)
         
         chat = LlmChat(
             api_key=api_key,
