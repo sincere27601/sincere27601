@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,10 @@ import {
   Target,
   Tag,
   RefreshCw,
-  Briefcase
+  Briefcase,
+  Play,
+  Pause,
+  Volume2
 } from "lucide-react";
 import { meetingsApi } from "@/lib/api";
 import { toast } from "sonner";
