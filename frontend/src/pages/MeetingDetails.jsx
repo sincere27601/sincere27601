@@ -257,38 +257,12 @@ ${meeting.transcript || "No transcript available"}
         </p>
       )}
 
-      {/* Audio Player - Show if audio file exists */}
+      {/* Audio Player with Waveform - Show if audio file exists */}
       {meeting.audio_file_id && (
-        <Card data-testid="audio-player-card" className="bg-slate-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleAudioPlayback}
-                className="h-12 w-12 rounded-full"
-                data-testid="play-audio-btn"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5 ml-0.5" />
-                )}
-              </Button>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-700">Original Recording</p>
-                <p className="text-xs text-slate-500">{meeting.audio_filename}</p>
-              </div>
-              <Volume2 className="w-5 h-5 text-slate-400" />
-            </div>
-            <audio
-              ref={audioRef}
-              src={meetingsApi.getAudioUrl(id)}
-              onEnded={handleAudioEnded}
-              className="hidden"
-            />
-          </CardContent>
-        </Card>
+        <AudioWaveform 
+          audioUrl={meetingsApi.getAudioUrl(id)}
+          filename={meeting.audio_filename}
+        />
       )}
 
       {/* Main Content - Split View */}
