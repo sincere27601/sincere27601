@@ -30,14 +30,12 @@ import {
   Target,
   Tag,
   RefreshCw,
-  Briefcase,
-  Play,
-  Pause,
-  Volume2
+  Briefcase
 } from "lucide-react";
 import { meetingsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import AudioWaveform from "@/components/AudioWaveform";
 
 const MeetingDetails = () => {
   const { id } = useParams();
