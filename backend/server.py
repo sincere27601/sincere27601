@@ -84,6 +84,12 @@ class User(BaseModel):
     picture: Optional[str] = ""
     auth_provider: str = "email"  # "email" or "google"
     password_hash: Optional[str] = None
+    subscription_status: str = "none"  # "none", "trial", "active", "lifetime", "expired"
+    subscription_plan: Optional[str] = None  # "weekly", "yearly"
+    subscription_expires_at: Optional[datetime] = None
+    trial_expires_at: Optional[datetime] = None
+    referral_code_used: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
