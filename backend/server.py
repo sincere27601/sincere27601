@@ -684,12 +684,14 @@ async def summarize_meeting(meeting_id: str, user: dict = Depends(require_auth))
             
             Return your response in EXACTLY this JSON format:
             {
+                "executive_summary": "A brief 2-3 sentence high-level overview for executives who need quick insights without details",
                 "summary": "A comprehensive 2-3 paragraph summary of the meeting covering all main points discussed",
                 "action_items": ["Action item 1", "Action item 2", ...],
                 "key_decisions": ["Decision 1", "Decision 2", ...],
                 "topics": ["Topic 1", "Topic 2", ...]
             }
             
+            The executive_summary should be concise and highlight only the most critical outcomes.
             Be thorough and professional. Extract ALL action items, decisions, and topics mentioned."""
         ).with_model("openai", "gpt-5.2")
         
@@ -717,6 +719,7 @@ Remember to respond ONLY with the JSON format specified."""
             summary_data = json.loads(response_text.strip())
         except json.JSONDecodeError:
             summary_data = {
+                "executive_summary": "",
                 "summary": response,
                 "action_items": [],
                 "key_decisions": [],
@@ -726,6 +729,7 @@ Remember to respond ONLY with the JSON format specified."""
         await db.meetings.update_one(
             {"id": meeting_id},
             {"$set": {
+                "executive_summary": summary_data.get("executive_summary", ""),
                 "summary": summary_data.get("summary", ""),
                 "action_items": summary_data.get("action_items", []),
                 "key_decisions": summary_data.get("key_decisions", []),
@@ -736,6 +740,7 @@ Remember to respond ONLY with the JSON format specified."""
         )
         
         return SummaryResponse(
+            executive_summary=summary_data.get("executive_summary", ""),
             summary=summary_data.get("summary", ""),
             action_items=summary_data.get("action_items", []),
             key_decisions=summary_data.get("key_decisions", []),
