@@ -159,3 +159,4 @@ Build a "Summary AI" app that records meetings and summarizes them for business 
 2. All environment variables properly configured via .env files
 3. CORS configured to accept all origins (adjust for production)
 4. MongoDB connection via MONGO_URL environment variable
+5. **Audio files are stored in MongoDB GridFS - no external storage needed**
