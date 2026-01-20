@@ -13,8 +13,12 @@ const api = axios.create({
 
 // Auth API
 export const authApi = {
-  register: async (email, password, name) => {
-    const response = await api.post("/auth/register", { email, password, name });
+  register: async (email, password, name, referralCode = null) => {
+    const payload = { email, password, name };
+    if (referralCode) {
+      payload.referral_code = referralCode;
+    }
+    const response = await api.post("/auth/register", payload);
     return response.data;
   },
 
