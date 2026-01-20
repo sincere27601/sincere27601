@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, File, UploadFile, HTTPException, Form, Request
+from fastapi import FastAPI, APIRouter, File, UploadFile, HTTPException, Form, Request, Response, Depends
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -6,14 +6,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import aiofiles
+import httpx
+import bcrypt
 from emergentintegrations.llm.openai import OpenAISpeechToText
 from emergentintegrations.llm.chat import LlmChat, UserMessage
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -40,30 +41,54 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Subscription Plans - Fixed packages (never accept amounts from frontend)
-SUBSCRIPTION_PLANS = {
-    "monthly": {
-        "id": "monthly",
-        "name": "Monthly Plan",
-        "price": 9.99,
-        "interval": "month",
-        "description": "Unlimited meetings, transcriptions & summaries"
-    },
-    "yearly": {
-        "id": "yearly",
-        "name": "Yearly Plan",
-        "price": 79.99,
-        "interval": "year",
-        "description": "Unlimited meetings, transcriptions & summaries (Save $40!)"
-    }
-}
+# Session expiry duration
+SESSION_EXPIRY_DAYS = 7
 
 
-# Models
+# ============== MODELS ==============
+
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    user_id: str = Field(default_factory=lambda: f"user_{uuid.uuid4().hex[:12]}")
+    email: str
+    name: str
+    picture: Optional[str] = ""
+    auth_provider: str = "email"  # "email" or "google"
+    password_hash: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class UserSession(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    session_id: str = Field(default_factory=lambda: f"sess_{uuid.uuid4().hex}")
+    user_id: str
+    session_token: str = Field(default_factory=lambda: f"token_{uuid.uuid4().hex}")
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=SESSION_EXPIRY_DAYS))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class GoogleSessionRequest(BaseModel):
+    session_id: str
+
+
 class Meeting(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str  # Link meeting to user
     title: str
     description: Optional[str] = ""
     transcript: Optional[str] = ""
@@ -74,6 +99,7 @@ class Meeting(BaseModel):
     topics: Optional[List[str]] = []
     duration_seconds: Optional[int] = 0
     audio_filename: Optional[str] = ""
+    audio_url: Optional[str] = ""  # Cloud storage URL
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -104,40 +130,244 @@ class SummaryResponse(BaseModel):
     meeting_id: str
 
 
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+# ============== AUTH HELPERS ==============
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+
+async def get_current_user(request: Request) -> Optional[dict]:
+    """Get current user from session token (cookie or header)"""
+    # Try cookie first
+    session_token = request.cookies.get("session_token")
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-
-class SubscriptionCheckoutRequest(BaseModel):
-    plan_id: str
-    origin_url: str
-
-
-class PaymentTransaction(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    # Fallback to Authorization header
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header[7:]
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str
-    plan_id: str
-    plan_name: str
-    amount: float
-    currency: str = "usd"
-    payment_status: str = "pending"
-    status: str = "initiated"
-    metadata: Optional[Dict[str, str]] = {}
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    if not session_token:
+        return None
+    
+    # Find session
+    session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+    if not session_doc:
+        return None
+    
+    # Check expiry
+    expires_at = session_doc.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        return None
+    
+    # Get user
+    user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0, "password_hash": 0})
+    return user_doc
 
 
-# Helper function to serialize meeting for response
+async def require_auth(request: Request) -> dict:
+    """Dependency that requires authentication"""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+# ============== AUTH ENDPOINTS ==============
+
+@api_router.post("/auth/register")
+async def register(request: RegisterRequest, response: Response):
+    """Register with email and password"""
+    # Check if email exists
+    existing = await db.users.find_one({"email": request.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user = User(
+        email=request.email,
+        name=request.name,
+        auth_provider="email",
+        password_hash=hash_password(request.password)
+    )
+    
+    user_doc = user.model_dump()
+    user_doc['created_at'] = user_doc['created_at'].isoformat()
+    await db.users.insert_one(user_doc)
+    
+    # Create session
+    session = UserSession(user_id=user.user_id)
+    session_doc = session.model_dump()
+    session_doc['expires_at'] = session_doc['expires_at'].isoformat()
+    session_doc['created_at'] = session_doc['created_at'].isoformat()
+    await db.user_sessions.insert_one(session_doc)
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session.session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=SESSION_EXPIRY_DAYS * 24 * 60 * 60
+    )
+    
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "name": user.name,
+        "picture": user.picture,
+        "session_token": session.session_token
+    }
+
+
+@api_router.post("/auth/login")
+async def login(request: LoginRequest, response: Response):
+    """Login with email and password"""
+    user_doc = await db.users.find_one({"email": request.email}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not user_doc.get("password_hash"):
+        raise HTTPException(status_code=401, detail="This account uses Google Sign-In")
+    
+    if not verify_password(request.password, user_doc["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create session
+    session = UserSession(user_id=user_doc["user_id"])
+    session_doc = session.model_dump()
+    session_doc['expires_at'] = session_doc['expires_at'].isoformat()
+    session_doc['created_at'] = session_doc['created_at'].isoformat()
+    await db.user_sessions.insert_one(session_doc)
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session.session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=SESSION_EXPIRY_DAYS * 24 * 60 * 60
+    )
+    
+    return {
+        "user_id": user_doc["user_id"],
+        "email": user_doc["email"],
+        "name": user_doc["name"],
+        "picture": user_doc.get("picture", ""),
+        "session_token": session.session_token
+    }
+
+
+@api_router.post("/auth/google/session")
+async def google_session(request: GoogleSessionRequest, response: Response):
+    """Exchange Google session_id for user session"""
+    # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": request.session_id}
+            )
+            
+            if resp.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid session")
+            
+            google_data = resp.json()
+    except Exception as e:
+        logger.error(f"Google auth error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Failed to verify Google session")
+    
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": google_data["email"]}, {"_id": 0})
+    
+    if existing_user:
+        user_id = existing_user["user_id"]
+        # Update user info if needed
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": google_data.get("name", existing_user.get("name")),
+                "picture": google_data.get("picture", existing_user.get("picture"))
+            }}
+        )
+    else:
+        # Create new user
+        user = User(
+            email=google_data["email"],
+            name=google_data.get("name", ""),
+            picture=google_data.get("picture", ""),
+            auth_provider="google"
+        )
+        user_doc = user.model_dump()
+        user_doc['created_at'] = user_doc['created_at'].isoformat()
+        await db.users.insert_one(user_doc)
+        user_id = user.user_id
+    
+    # Create session
+    session = UserSession(user_id=user_id)
+    session_doc = session.model_dump()
+    session_doc['expires_at'] = session_doc['expires_at'].isoformat()
+    session_doc['created_at'] = session_doc['created_at'].isoformat()
+    await db.user_sessions.insert_one(session_doc)
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session.session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=SESSION_EXPIRY_DAYS * 24 * 60 * 60
+    )
+    
+    # Get updated user
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    
+    return {
+        "user_id": user_doc["user_id"],
+        "email": user_doc["email"],
+        "name": user_doc["name"],
+        "picture": user_doc.get("picture", ""),
+        "session_token": session.session_token
+    }
+
+
+@api_router.get("/auth/me")
+async def get_me(request: Request):
+    """Get current authenticated user"""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    """Logout - delete session and clear cookie"""
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.user_sessions.delete_one({"session_token": session_token})
+    
+    response.delete_cookie(key="session_token", path="/")
+    return {"message": "Logged out successfully"}
+
+
+# ============== MEETING ENDPOINTS ==============
+
 def serialize_meeting(meeting: dict) -> dict:
     if '_id' in meeting:
         del meeting['_id']
@@ -148,199 +378,15 @@ def serialize_meeting(meeting: dict) -> dict:
     return meeting
 
 
-# Root endpoint
 @api_router.get("/")
 async def root():
-    return {"message": "Meeting Summary AI API"}
+    return {"message": "Summary Boss API"}
 
-
-# ============== SUBSCRIPTION ENDPOINTS ==============
-
-@api_router.get("/subscription/plans")
-async def get_subscription_plans():
-    """Get all available subscription plans"""
-    return {"plans": list(SUBSCRIPTION_PLANS.values())}
-
-
-@api_router.post("/subscription/checkout")
-async def create_subscription_checkout(request: Request, checkout_request: SubscriptionCheckoutRequest):
-    """Create a Stripe checkout session for subscription"""
-    
-    # Validate plan
-    if checkout_request.plan_id not in SUBSCRIPTION_PLANS:
-        raise HTTPException(status_code=400, detail="Invalid subscription plan")
-    
-    plan = SUBSCRIPTION_PLANS[checkout_request.plan_id]
-    
-    # Get Stripe API key
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
-    if not stripe_api_key:
-        raise HTTPException(status_code=500, detail="Stripe not configured")
-    
-    # Build URLs from provided origin
-    origin_url = checkout_request.origin_url.rstrip('/')
-    success_url = f"{origin_url}/app/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{origin_url}/app/subscription"
-    
-    # Initialize Stripe
-    host_url = str(request.base_url).rstrip('/')
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    try:
-        # Create checkout session with fixed amount from backend
-        checkout_req = CheckoutSessionRequest(
-            amount=float(plan["price"]),
-            currency="usd",
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={
-                "plan_id": plan["id"],
-                "plan_name": plan["name"],
-                "interval": plan["interval"]
-            }
-        )
-        
-        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_req)
-        
-        # Create payment transaction record BEFORE redirect
-        transaction = PaymentTransaction(
-            session_id=session.session_id,
-            plan_id=plan["id"],
-            plan_name=plan["name"],
-            amount=float(plan["price"]),
-            currency="usd",
-            payment_status="pending",
-            status="initiated",
-            metadata={
-                "plan_id": plan["id"],
-                "plan_name": plan["name"],
-                "interval": plan["interval"]
-            }
-        )
-        
-        doc = transaction.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
-        doc['updated_at'] = doc['updated_at'].isoformat()
-        
-        await db.payment_transactions.insert_one(doc)
-        
-        return {
-            "checkout_url": session.url,
-            "session_id": session.session_id
-        }
-        
-    except Exception as e:
-        logger.error(f"Stripe checkout error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create checkout session: {str(e)}")
-
-
-@api_router.get("/subscription/status/{session_id}")
-async def get_subscription_status(request: Request, session_id: str):
-    """Check the status of a subscription payment"""
-    
-    # Check if already processed
-    existing = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-    
-    if existing and existing.get("payment_status") == "paid":
-        return {
-            "status": "complete",
-            "payment_status": "paid",
-            "plan_id": existing.get("plan_id"),
-            "plan_name": existing.get("plan_name"),
-            "amount": existing.get("amount")
-        }
-    
-    # Get Stripe API key
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
-    if not stripe_api_key:
-        raise HTTPException(status_code=500, detail="Stripe not configured")
-    
-    # Initialize Stripe
-    host_url = str(request.base_url).rstrip('/')
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    try:
-        checkout_status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
-        
-        # Update transaction in database
-        update_data = {
-            "status": checkout_status.status,
-            "payment_status": checkout_status.payment_status,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }
-        
-        await db.payment_transactions.update_one(
-            {"session_id": session_id},
-            {"$set": update_data}
-        )
-        
-        # Get updated transaction
-        transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-        
-        return {
-            "status": checkout_status.status,
-            "payment_status": checkout_status.payment_status,
-            "amount": checkout_status.amount_total / 100 if checkout_status.amount_total else 0,
-            "currency": checkout_status.currency,
-            "plan_id": transaction.get("plan_id") if transaction else None,
-            "plan_name": transaction.get("plan_name") if transaction else None
-        }
-        
-    except Exception as e:
-        logger.error(f"Status check error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to check payment status: {str(e)}")
-
-
-@api_router.post("/webhook/stripe")
-async def stripe_webhook(request: Request):
-    """Handle Stripe webhooks"""
-    
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
-    if not stripe_api_key:
-        raise HTTPException(status_code=500, detail="Stripe not configured")
-    
-    host_url = str(request.base_url).rstrip('/')
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    try:
-        body = await request.body()
-        signature = request.headers.get("Stripe-Signature")
-        
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
-        
-        if webhook_response:
-            # Update payment transaction
-            await db.payment_transactions.update_one(
-                {"session_id": webhook_response.session_id},
-                {"$set": {
-                    "status": webhook_response.event_type,
-                    "payment_status": webhook_response.payment_status,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
-            )
-        
-        return {"status": "success"}
-        
-    except Exception as e:
-        logger.error(f"Webhook error: {str(e)}")
-        return {"status": "error", "message": str(e)}
-
-
-@api_router.get("/subscription/transactions")
-async def get_payment_transactions(limit: int = 50):
-    """Get payment transaction history"""
-    transactions = await db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
-    return {"transactions": transactions}
-
-
-# ============== MEETING ENDPOINTS ==============
 
 @api_router.post("/meetings", response_model=Meeting)
-async def create_meeting(meeting_data: MeetingCreate):
+async def create_meeting(meeting_data: MeetingCreate, user: dict = Depends(require_auth)):
     meeting = Meeting(
+        user_id=user["user_id"],
         title=meeting_data.title,
         description=meeting_data.description,
         attendees=meeting_data.attendees
@@ -355,16 +401,14 @@ async def create_meeting(meeting_data: MeetingCreate):
 
 
 @api_router.get("/meetings", response_model=List[Meeting])
-async def get_meetings(search: Optional[str] = None, limit: int = 50):
-    query = {}
+async def get_meetings(search: Optional[str] = None, limit: int = 50, user: dict = Depends(require_auth)):
+    query = {"user_id": user["user_id"]}
     if search:
-        query = {
-            "$or": [
-                {"title": {"$regex": search, "$options": "i"}},
-                {"description": {"$regex": search, "$options": "i"}},
-                {"transcript": {"$regex": search, "$options": "i"}}
-            ]
-        }
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"transcript": {"$regex": search, "$options": "i"}}
+        ]
     
     meetings = await db.meetings.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
     
@@ -375,8 +419,8 @@ async def get_meetings(search: Optional[str] = None, limit: int = 50):
 
 
 @api_router.get("/meetings/{meeting_id}", response_model=Meeting)
-async def get_meeting(meeting_id: str):
-    meeting = await db.meetings.find_one({"id": meeting_id}, {"_id": 0})
+async def get_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+    meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]}, {"_id": 0})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
@@ -384,8 +428,8 @@ async def get_meeting(meeting_id: str):
 
 
 @api_router.put("/meetings/{meeting_id}", response_model=Meeting)
-async def update_meeting(meeting_id: str, meeting_data: MeetingUpdate):
-    existing = await db.meetings.find_one({"id": meeting_id})
+async def update_meeting(meeting_id: str, meeting_data: MeetingUpdate, user: dict = Depends(require_auth)):
+    existing = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
@@ -399,16 +443,16 @@ async def update_meeting(meeting_id: str, meeting_data: MeetingUpdate):
 
 
 @api_router.delete("/meetings/{meeting_id}")
-async def delete_meeting(meeting_id: str):
-    result = await db.meetings.delete_one({"id": meeting_id})
+async def delete_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+    result = await db.meetings.delete_one({"id": meeting_id, "user_id": user["user_id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return {"message": "Meeting deleted successfully"}
 
 
 @api_router.post("/meetings/{meeting_id}/upload")
-async def upload_audio(meeting_id: str, file: UploadFile = File(...)):
-    meeting = await db.meetings.find_one({"id": meeting_id})
+async def upload_audio(meeting_id: str, file: UploadFile = File(...), user: dict = Depends(require_auth)):
+    meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
@@ -416,7 +460,8 @@ async def upload_audio(meeting_id: str, file: UploadFile = File(...)):
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail=f"File type not supported. Allowed: {allowed_types}")
     
-    filename = f"{meeting_id}_{file.filename}"
+    # Save file locally (in production, this would go to cloud storage)
+    filename = f"{user['user_id']}_{meeting_id}_{file.filename}"
     filepath = UPLOADS_DIR / filename
     
     async with aiofiles.open(filepath, 'wb') as f:
@@ -432,8 +477,8 @@ async def upload_audio(meeting_id: str, file: UploadFile = File(...)):
 
 
 @api_router.post("/meetings/{meeting_id}/transcribe", response_model=TranscribeResponse)
-async def transcribe_meeting(meeting_id: str):
-    meeting = await db.meetings.find_one({"id": meeting_id})
+async def transcribe_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+    meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
@@ -480,8 +525,8 @@ async def transcribe_meeting(meeting_id: str):
 
 
 @api_router.post("/meetings/{meeting_id}/summarize", response_model=SummaryResponse)
-async def summarize_meeting(meeting_id: str):
-    meeting = await db.meetings.find_one({"id": meeting_id})
+async def summarize_meeting(meeting_id: str, user: dict = Depends(require_auth)):
+    meeting = await db.meetings.find_one({"id": meeting_id, "user_id": user["user_id"]})
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
@@ -575,9 +620,11 @@ Remember to respond ONLY with the JSON format specified."""
 async def process_meeting(
     title: str = Form(...),
     description: str = Form(""),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    user: dict = Depends(require_auth)
 ):
     meeting = Meeting(
+        user_id=user["user_id"],
         title=title,
         description=description,
         status="processing"
@@ -590,7 +637,7 @@ async def process_meeting(
     await db.meetings.insert_one(doc)
     meeting_id = meeting.id
     
-    filename = f"{meeting_id}_{file.filename}"
+    filename = f"{user['user_id']}_{meeting_id}_{file.filename}"
     filepath = UPLOADS_DIR / filename
     
     async with aiofiles.open(filepath, 'wb') as f:
@@ -693,39 +740,19 @@ Remember to respond ONLY with the JSON format specified."""
 
 
 @api_router.get("/stats")
-async def get_stats():
-    total_meetings = await db.meetings.count_documents({})
-    completed_meetings = await db.meetings.count_documents({"status": "completed"})
-    pending_meetings = await db.meetings.count_documents({"status": {"$in": ["pending", "processing", "uploaded", "transcribed", "transcribing", "summarizing"]}})
+async def get_stats(user: dict = Depends(require_auth)):
+    total_meetings = await db.meetings.count_documents({"user_id": user["user_id"]})
+    completed_meetings = await db.meetings.count_documents({"user_id": user["user_id"], "status": "completed"})
+    pending_meetings = await db.meetings.count_documents({
+        "user_id": user["user_id"],
+        "status": {"$in": ["pending", "processing", "uploaded", "transcribed", "transcribing", "summarizing"]}
+    })
     
     return {
         "total_meetings": total_meetings,
         "completed_meetings": completed_meetings,
         "pending_meetings": pending_meetings
     }
-
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
 
 
 # Include the router in the main app
