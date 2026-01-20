@@ -38,7 +38,8 @@ Build a "Summary AI" app that records meetings and summarizes them for business 
 - Password management (forgot password, reset password, change password)
 - User profile management
 - Meeting CRUD API endpoints
-- Audio file upload endpoint
+- **Audio file upload to MongoDB GridFS**
+- **Audio file streaming from GridFS**
 - Transcription endpoint (OpenAI Whisper integration)
 - Summarization endpoint (GPT-5.2 integration)
 - Combined process endpoint (upload + transcribe + summarize)
