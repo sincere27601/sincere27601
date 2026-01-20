@@ -340,6 +340,215 @@ class SummaryBossAuthTester:
         
         return success
 
+    def test_forgot_password(self):
+        """Test forgot password endpoint"""
+        forgot_data = {
+            "email": self.test_user_email
+        }
+        
+        success, response = self.run_test(
+            "Forgot Password Request",
+            "POST",
+            "api/auth/forgot-password",
+            200,
+            data=forgot_data
+        )
+        
+        if success and response:
+            # Check response structure
+            if 'message' in response:
+                print(f"   ✅ Message received: {response.get('message')}")
+            
+            # In test mode, should return reset_token
+            reset_token = response.get('reset_token')
+            if reset_token:
+                print(f"   ✅ Reset token received: {reset_token[:20]}...")
+                return reset_token
+            else:
+                print(f"   ⚠️  No reset token in response (may be production mode)")
+                return True  # Still success if message is present
+        
+        return None
+
+    def test_reset_password(self, reset_token):
+        """Test reset password with token"""
+        if not reset_token:
+            self.log_test("Reset Password", False, "No reset token available")
+            return False
+            
+        new_password = "NewTestPass123!"
+        reset_data = {
+            "token": reset_token,
+            "new_password": new_password
+        }
+        
+        success, response = self.run_test(
+            "Reset Password with Token",
+            "POST",
+            "api/auth/reset-password",
+            200,
+            data=reset_data
+        )
+        
+        if success:
+            # Update our test password for future logins
+            self.test_user_password = new_password
+            print(f"   ✅ Password updated for future tests")
+        
+        return success
+
+    def test_update_profile(self):
+        """Test updating user profile"""
+        if not self.session_token:
+            self.log_test("Update Profile", False, "No session token available")
+            return False
+            
+        new_name = f"Updated {self.test_user_name}"
+        profile_data = {
+            "name": new_name,
+            "picture": "https://example.com/avatar.jpg"
+        }
+        
+        success, response = self.run_test(
+            "Update User Profile",
+            "PUT",
+            "api/auth/profile",
+            200,
+            data=profile_data,
+            use_auth=True
+        )
+        
+        if success and response:
+            # Validate updated data
+            if response.get('name') == new_name:
+                print(f"   ✅ Name updated successfully: {response.get('name')}")
+            else:
+                print(f"   ❌ Name not updated correctly")
+                return False
+                
+            if response.get('picture') == profile_data['picture']:
+                print(f"   ✅ Picture updated successfully")
+            else:
+                print(f"   ❌ Picture not updated correctly")
+        
+        return success
+
+    def test_change_password(self):
+        """Test changing password for authenticated user"""
+        if not self.session_token:
+            self.log_test("Change Password", False, "No session token available")
+            return False
+            
+        new_password = "ChangedTestPass123!"
+        password_data = {
+            "current_password": self.test_user_password,
+            "new_password": new_password
+        }
+        
+        success, response = self.run_test(
+            "Change Password (Authenticated)",
+            "POST",
+            "api/auth/change-password",
+            200,
+            data=password_data,
+            use_auth=True
+        )
+        
+        if success:
+            # Update our test password for future logins
+            self.test_user_password = new_password
+            print(f"   ✅ Password changed successfully")
+            
+            # Verify we can still login with new password
+            login_data = {
+                "email": self.test_user_email,
+                "password": new_password
+            }
+            
+            login_success, login_response = self.run_test(
+                "Login with New Password",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            
+            if login_success and login_response:
+                self.session_token = login_response.get('session_token')
+                print(f"   ✅ Login with new password successful")
+            else:
+                print(f"   ❌ Login with new password failed")
+                return False
+        
+        return success
+
+    def test_change_password_invalid_current(self):
+        """Test changing password with invalid current password"""
+        if not self.session_token:
+            self.log_test("Change Password (Invalid Current)", False, "No session token available")
+            return False
+            
+        password_data = {
+            "current_password": "WrongCurrentPassword",
+            "new_password": "NewPassword123!"
+        }
+        
+        success, response = self.run_test(
+            "Change Password (Invalid Current - Should be 400)",
+            "POST",
+            "api/auth/change-password",
+            400,
+            data=password_data,
+            use_auth=True
+        )
+        
+        return success
+
+    def test_meeting_executive_summary(self):
+        """Test that meeting model includes executive_summary field"""
+        if not self.session_token:
+            self.log_test("Meeting Executive Summary", False, "No session token available")
+            return False
+            
+        # Create a test meeting
+        meeting_data = {
+            "title": f"Executive Summary Test Meeting {datetime.now().strftime('%H%M%S')}",
+            "description": "Testing executive summary field",
+            "attendees": ["exec@example.com"]
+        }
+        
+        success, response = self.run_test(
+            "Create Meeting (Check Executive Summary Field)",
+            "POST",
+            "api/meetings",
+            200,
+            data=meeting_data,
+            use_auth=True
+        )
+        
+        if success and response:
+            meeting_id = response.get('id')
+            
+            # Check if executive_summary field exists in response
+            if 'executive_summary' in response:
+                print(f"   ✅ Executive summary field present: {response.get('executive_summary', 'null')}")
+                
+                # Clean up - delete the test meeting
+                self.run_test(
+                    "Delete Executive Summary Test Meeting",
+                    "DELETE",
+                    f"api/meetings/{meeting_id}",
+                    200,
+                    use_auth=True
+                )
+                
+                return True
+            else:
+                print(f"   ❌ Executive summary field missing from meeting model")
+                return False
+        
+        return False
+
     def run_all_tests(self):
         """Run comprehensive authentication API tests"""
         print("🚀 Starting Summary Boss Authentication API Tests")
