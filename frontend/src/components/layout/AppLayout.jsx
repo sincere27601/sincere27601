@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Menu,
   X,
-  User
+  User,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Record Meeting", href: "/app/record", icon: Mic },
   { name: "Upload Audio", href: "/app/upload", icon: Upload },
   { name: "Meeting History", href: "/app/history", icon: History },
+  { name: "Profile", href: "/app/profile", icon: Settings },
 ];
 
 export const Sidebar = ({ isOpen, onClose }) => {
