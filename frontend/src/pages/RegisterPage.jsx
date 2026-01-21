@@ -6,15 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Loader2, UserPlus, Gift } from "lucide-react";
+import { FileText, Loader2, UserPlus, Gift, Sparkles, CreditCard } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { authApi, referralApi } from "@/lib/api";
+import { authApi, referralApi, promoApi, subscriptionApi } from "@/lib/api";
 import { toast } from "sonner";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref");
+  const planId = searchParams.get("plan"); // weekly or yearly
+  const promoFromUrl = searchParams.get("promo"); // promo code like "Gillian"
   
   const { setUser, setIsAuthenticated } = useAuth();
   const [name, setName] = useState("");
@@ -24,6 +26,9 @@ const RegisterPage = () => {
   const [referralCode, setReferralCode] = useState(refCode || "");
   const [referrerName, setReferrerName] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Determine if user has lifetime promo code
+  const hasLifetimePromo = promoFromUrl && promoFromUrl.toLowerCase() === "gillian";
 
   useEffect(() => {
     if (refCode) {
