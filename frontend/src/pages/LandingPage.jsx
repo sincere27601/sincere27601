@@ -252,7 +252,7 @@ const LandingPage = () => {
           </div>
           
           <div className="text-center mt-12">
-            <Link to="/register" data-testid="cta-try-now">
+            <Link to="/pricing" data-testid="cta-try-now">
               <Button size="lg" className="bg-primary hover:bg-primary/90">
                 Start Your Free Trial
                 <ArrowRight className="w-5 h-5 ml-2" />
