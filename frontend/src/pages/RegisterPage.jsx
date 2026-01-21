@@ -71,7 +71,41 @@ const RegisterPage = () => {
       setUser(userData);
       setIsAuthenticated(true);
       toast.success("Account created successfully!");
-      navigate("/app");
+      
+      // If user has lifetime promo code (Gillian), apply it and go to dashboard
+      if (hasLifetimePromo) {
+        try {
+          await promoApi.apply(promoFromUrl);
+          toast.success("Lifetime free access activated!");
+          navigate("/app");
+        } catch (promoError) {
+          console.error("Promo code error:", promoError);
+          toast.error("Failed to apply promo code, but account created");
+          navigate("/app");
+        }
+      }
+      // If user selected a plan, redirect to Stripe checkout
+      else if (planId && (planId === "weekly" || planId === "yearly")) {
+        try {
+          const originUrl = window.location.origin;
+          const result = await subscriptionApi.createCheckout(planId, originUrl);
+          
+          if (result.checkout_url) {
+            toast.success(`Starting 3-day free trial! Redirecting to payment setup...`);
+            window.location.href = result.checkout_url;
+          } else {
+            navigate("/app/subscription");
+          }
+        } catch (checkoutError) {
+          console.error("Checkout error:", checkoutError);
+          toast.error("Failed to start checkout. Please try again from the subscription page.");
+          navigate("/app/subscription");
+        }
+      }
+      // No plan or promo, go to subscription page to choose
+      else {
+        navigate("/app/subscription");
+      }
     } catch (error) {
       console.error("Register error:", error);
       toast.error(error.response?.data?.detail || "Failed to create account");
