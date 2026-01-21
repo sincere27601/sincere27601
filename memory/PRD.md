@@ -103,7 +103,10 @@ Build a "Summary AI" app that records meetings and summarizes them for business 
 ### P1 (High Priority) - COMPLETED ✅
 - ✅ Deploy to production (www.Summaryboss.com domain purchased)
 - ✅ Live Stripe keys configured (January 2025)
-- ✅ Landing page navigation fixed (Sign Up/Login buttons)
+- ✅ Landing page navigation fixed - Sign Up/Start Free Trial → Pricing page
+- ✅ Public pricing page created (`/pricing`) with plan selection and promo code input
+- ✅ Promo code "Gillian" flow - bypasses credit card, goes directly to dashboard
+- ✅ Plan selection flow - registers user then redirects to Stripe checkout
 - ✅ Audio waveform player for meeting recordings
 - ✅ MongoDB GridFS for audio file storage
 
