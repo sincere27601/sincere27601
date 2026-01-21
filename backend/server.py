@@ -345,8 +345,11 @@ class RegisterWithReferralRequest(BaseModel):
 @api_router.post("/auth/register")
 async def register(request: RegisterWithReferralRequest, response: Response):
     """Register with email and password, optionally with referral code"""
-    # Check if email exists
-    existing = await db.users.find_one({"email": request.email})
+    # Normalize email to lowercase
+    email = request.email.lower().strip()
+    
+    # Check if email exists (case-insensitive)
+    existing = await db.users.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -359,7 +362,7 @@ async def register(request: RegisterWithReferralRequest, response: Response):
     
     # Create user with their own referral code
     user = User(
-        email=request.email,
+        email=email,  # Use normalized email
         name=request.name,
         auth_provider="email",
         password_hash=hash_password(request.password),
