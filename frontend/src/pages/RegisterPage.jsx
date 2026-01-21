@@ -28,6 +28,14 @@ const RegisterPage = () => {
   
   // Determine if user has lifetime promo code
   const hasLifetimePromo = promoFromUrl && promoFromUrl.toLowerCase() === "gillian";
+  
+  // If no plan and no promo code, redirect to pricing page
+  // Users must select a plan or have a promo code to register
+  useEffect(() => {
+    if (!planId && !hasLifetimePromo) {
+      window.location.href = "/pricing";
+    }
+  }, [planId, hasLifetimePromo]);
 
   useEffect(() => {
     if (refCode) {
