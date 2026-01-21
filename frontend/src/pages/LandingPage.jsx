@@ -86,7 +86,7 @@ const LandingPage = () => {
           </nav>
           
           <div className="flex items-center gap-3">
-            <Link to="/register" data-testid="signup-btn">
+            <Link to="/pricing" data-testid="signup-btn">
               <Button className="bg-primary hover:bg-primary/90">
                 Sign Up
                 <ArrowRight className="w-4 h-4 ml-2" />
