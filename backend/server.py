@@ -423,7 +423,8 @@ async def register(request: RegisterWithReferralRequest, response: Response):
 @api_router.post("/auth/login")
 async def login(request: LoginRequest, response: Response):
     """Login with email and password"""
-    user_doc = await db.users.find_one({"email": request.email}, {"_id": 0})
+    # Case-insensitive email lookup
+    user_doc = await db.users.find_one({"email": {"$regex": f"^{request.email}$", "$options": "i"}}, {"_id": 0})
     if not user_doc:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
