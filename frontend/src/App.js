@@ -11,6 +11,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AuthCallback from "@/pages/AuthCallback";
+import PublicPricingPage from "@/pages/PublicPricingPage";
 import Dashboard from "@/pages/Dashboard";
 import RecordMeeting from "@/pages/RecordMeeting";
 import UploadMeeting from "@/pages/UploadMeeting";
@@ -38,6 +39,7 @@ const AppRouter = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/pricing" element={<PublicPricingPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/app" element={
