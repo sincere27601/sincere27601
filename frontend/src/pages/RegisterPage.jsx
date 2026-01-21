@@ -77,11 +77,13 @@ const RegisterPage = () => {
         try {
           await promoApi.apply(promoFromUrl);
           toast.success("Lifetime free access activated!");
-          navigate("/app");
+          window.location.href = "/app";
+          return; // Stop execution, browser will navigate
         } catch (promoError) {
           console.error("Promo code error:", promoError);
           toast.error("Failed to apply promo code, but account created");
-          navigate("/app");
+          window.location.href = "/app";
+          return;
         }
       }
       // If user selected a plan, redirect to Stripe checkout
@@ -91,25 +93,32 @@ const RegisterPage = () => {
           const result = await subscriptionApi.createCheckout(planId, originUrl);
           
           if (result.checkout_url) {
-            toast.success(`Starting 3-day free trial! Redirecting to payment setup...`);
-            window.location.href = result.checkout_url;
+            toast.success("Redirecting to payment setup...");
+            // Use setTimeout to allow toast to show before redirect
+            setTimeout(() => {
+              window.location.href = result.checkout_url;
+            }, 500);
+            return; // Stop execution
           } else {
-            navigate("/app/subscription");
+            window.location.href = "/app/subscription";
+            return;
           }
         } catch (checkoutError) {
           console.error("Checkout error:", checkoutError);
           toast.error("Failed to start checkout. Please try again from the subscription page.");
-          navigate("/app/subscription");
+          setLoading(false);
+          window.location.href = "/app/subscription";
+          return;
         }
       }
       // No plan or promo, go to subscription page to choose
       else {
-        navigate("/app/subscription");
+        window.location.href = "/app/subscription";
+        return;
       }
     } catch (error) {
       console.error("Register error:", error);
       toast.error(error.response?.data?.detail || "Failed to create account");
-    } finally {
       setLoading(false);
     }
   };
