@@ -252,9 +252,9 @@ const LandingPage = () => {
           </div>
           
           <div className="text-center mt-12">
-            <Link to="/app" data-testid="cta-try-now">
+            <Link to="/register" data-testid="cta-try-now">
               <Button size="lg" className="bg-primary hover:bg-primary/90">
-                Try it Now - It's Free
+                Start Your Free Trial
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -271,9 +271,9 @@ const LandingPage = () => {
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
             Start recording and summarizing your meetings today. Completely free!
           </p>
-          <Link to="/register" data-testid="cta-get-started-bottom">
+          <Link to="/subscription" data-testid="cta-get-started-bottom">
             <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
-              Get Started Free
+              See Pricing Plans
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
