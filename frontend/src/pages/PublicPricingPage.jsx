@@ -224,15 +224,16 @@ const PublicPricingPage = () => {
                   </li>
                 </ul>
                 
-                <Button 
-                  onClick={() => handleSelectPlan("yearly")}
-                  className="w-full bg-primary hover:bg-primary/90"
-                  data-testid="select-yearly-btn"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Select Yearly Plan
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <Link to="/register?plan=yearly" className="w-full">
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90"
+                    data-testid="select-yearly-btn"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Select Yearly Plan
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
