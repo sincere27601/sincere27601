@@ -93,7 +93,7 @@ const RegisterPage = () => {
           return;
         }
       }
-      // If user selected a plan, redirect to Stripe checkout
+      // User selected a plan, redirect to Stripe checkout
       else if (planId && (planId === "weekly" || planId === "yearly")) {
         try {
           const originUrl = window.location.origin;
@@ -107,20 +107,20 @@ const RegisterPage = () => {
             }, 500);
             return; // Stop execution
           } else {
-            window.location.href = "/app/subscription";
+            window.location.href = "/pricing";
             return;
           }
         } catch (checkoutError) {
           console.error("Checkout error:", checkoutError);
-          toast.error("Failed to start checkout. Please try again from the subscription page.");
+          toast.error("Failed to start checkout. Please try again.");
           setLoading(false);
-          window.location.href = "/app/subscription";
+          window.location.href = "/pricing";
           return;
         }
       }
-      // No plan or promo, go to subscription page to choose
+      // Should not reach here, but redirect to pricing just in case
       else {
-        window.location.href = "/app/subscription";
+        window.location.href = "/pricing";
         return;
       }
     } catch (error) {
