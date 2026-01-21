@@ -168,16 +168,17 @@ const PublicPricingPage = () => {
                   ))}
                 </ul>
                 
-                <Button 
-                  onClick={() => handleSelectPlan("weekly")}
-                  className="w-full"
-                  variant="outline"
-                  data-testid="select-weekly-btn"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Select Weekly Plan
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <Link to="/register?plan=weekly" className="w-full">
+                  <Button 
+                    className="w-full"
+                    variant="outline"
+                    data-testid="select-weekly-btn"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Select Weekly Plan
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
