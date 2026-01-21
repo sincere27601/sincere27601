@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,8 @@ import {
 import { toast } from "sonner";
 
 const PublicPricingPage = () => {
-  const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
-  const [checkingPromo, setCheckingPromo] = useState(false);
+  const [checkingPromo, setCheckingPromo] = useState("");
 
   const features = [
     "Unlimited meeting recordings",
@@ -34,11 +33,6 @@ const PublicPricingPage = () => {
     "Full-text search",
     "Export to text files"
   ];
-
-  const handleSelectPlan = (planId) => {
-    // Navigate to register with the selected plan
-    window.location.href = `/register?plan=${planId}`;
-  };
 
   const handlePromoCode = async () => {
     if (!promoCode.trim()) {
