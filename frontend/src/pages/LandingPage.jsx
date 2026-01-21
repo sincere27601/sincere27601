@@ -115,13 +115,13 @@ const LandingPage = () => {
                 Get key decisions, action items, and topics extracted automatically.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/register" data-testid="cta-free-trial">
+                <Link to="/pricing" data-testid="cta-free-trial">
                   <Button size="lg" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                     <Zap className="w-5 h-5 mr-2" />
                     Start Free Trial
                   </Button>
                 </Link>
-                <Link to="/app/subscription" data-testid="cta-pricing">
+                <Link to="/pricing" data-testid="cta-pricing">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     <CreditCard className="w-5 h-5 mr-2" />
                     View Pricing
