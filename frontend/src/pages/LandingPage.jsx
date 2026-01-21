@@ -121,7 +121,7 @@ const LandingPage = () => {
                     Start Free Trial
                   </Button>
                 </Link>
-                <Link to="/subscription" data-testid="cta-pricing">
+                <Link to="/app/subscription" data-testid="cta-pricing">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     <CreditCard className="w-5 h-5 mr-2" />
                     View Pricing
@@ -271,7 +271,7 @@ const LandingPage = () => {
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
             Start recording and summarizing your meetings today. Completely free!
           </p>
-          <Link to="/subscription" data-testid="cta-get-started-bottom">
+          <Link to="/app/subscription" data-testid="cta-get-started-bottom">
             <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
               See Pricing Plans
               <ArrowRight className="w-5 h-5 ml-2" />
