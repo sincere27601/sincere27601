@@ -37,7 +37,7 @@ const PublicPricingPage = () => {
 
   const handleSelectPlan = (planId) => {
     // Navigate to register with the selected plan
-    navigate(`/register?plan=${planId}`);
+    window.location.href = `/register?plan=${planId}`;
   };
 
   const handlePromoCode = async () => {
