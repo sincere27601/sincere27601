@@ -52,7 +52,7 @@ const PublicPricingPage = () => {
     if (promoCode.trim().toLowerCase() === "gillian") {
       toast.success("Valid promo code! You'll get lifetime free access.");
       // Navigate to register with promo code
-      navigate(`/register?promo=${promoCode.trim()}`);
+      window.location.href = `/register?promo=${promoCode.trim()}`;
     } else {
       toast.error("Invalid promo code. Please try again or select a plan.");
     }
