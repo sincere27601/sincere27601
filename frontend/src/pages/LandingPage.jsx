@@ -9,7 +9,8 @@ import {
   ArrowRight,
   Play,
   Upload,
-  FileSearch
+  FileSearch,
+  CreditCard
 } from "lucide-react";
 
 const features = [
@@ -84,12 +85,19 @@ const LandingPage = () => {
             <a href="#how-it-works" className="nav-link" data-testid="nav-how-it-works">How it Works</a>
           </nav>
           
-          <Link to="/login" data-testid="get-started-btn">
-            <Button className="bg-primary hover:bg-primary/90">
-              Sign In
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/register" data-testid="signup-btn">
+              <Button className="bg-primary hover:bg-primary/90">
+                Sign Up
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+            <Link to="/login" data-testid="login-btn">
+              <Button variant="outline">
+                Log In
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -107,16 +115,16 @@ const LandingPage = () => {
                 Get key decisions, action items, and topics extracted automatically.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/login" data-testid="cta-record">
+                <Link to="/register" data-testid="cta-free-trial">
                   <Button size="lg" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
-                    <Mic className="w-5 h-5 mr-2" />
-                    Get Started Free
+                    <Zap className="w-5 h-5 mr-2" />
+                    Start Free Trial
                   </Button>
                 </Link>
-                <Link to="/register" data-testid="cta-upload">
+                <Link to="/subscription" data-testid="cta-pricing">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    <Upload className="w-5 h-5 mr-2" />
-                    Create Account
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    View Pricing
                   </Button>
                 </Link>
               </div>
