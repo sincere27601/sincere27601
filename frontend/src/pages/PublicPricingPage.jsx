@@ -21,7 +21,7 @@ import { toast } from "sonner";
 
 const PublicPricingPage = () => {
   const [promoCode, setPromoCode] = useState("");
-  const [checkingPromo, setCheckingPromo] = useState("");
+  const [checkingPromo, setCheckingPromo] = useState(false);
 
   const features = [
     "Unlimited meeting recordings",
