@@ -136,6 +136,22 @@ const RegisterPage = () => {
           <CardTitle className="font-['Manrope']">Create an account</CardTitle>
           <CardDescription>Get started with Summary Boss today</CardDescription>
           
+          {/* Show selected plan */}
+          {planId && !hasLifetimePromo && (
+            <Badge className="mt-2 bg-primary">
+              <CreditCard className="w-3 h-3 mr-1" />
+              {planId === "yearly" ? "Yearly Plan ($78/year)" : "Weekly Plan ($7/week)"} • 3-day free trial
+            </Badge>
+          )}
+          
+          {/* Show lifetime promo */}
+          {hasLifetimePromo && (
+            <Badge className="mt-2 bg-emerald-600">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Lifetime Free Access (No credit card needed!)
+            </Badge>
+          )}
+          
           {referrerName && (
             <Badge variant="secondary" className="mt-2">
               <Gift className="w-3 h-3 mr-1" />
